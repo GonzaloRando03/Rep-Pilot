@@ -1,0 +1,196 @@
+.forced-2fa-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: var(--space-6);
+  background: var(--color-bg-primary);
+}
+
+.forced-2fa-page__card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--color-surface-secondary);
+  border: var(--border-1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-10) var(--space-8);
+  box-shadow: var(--shadow-2);
+  animation: login-card-enter var(--duration-slow) var(--easing-standard) both;
+}
+
+.forced-2fa-page__header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+}
+
+.forced-2fa-page__title {
+  font-size: var(--type-heading-1);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3);
+  line-height: 1.2;
+}
+
+.forced-2fa-page__subtitle {
+  font-size: var(--type-body-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.forced-2fa-page__step-label {
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-sm);
+  margin: 0 0 var(--space-1);
+}
+
+.forced-2fa-page__step-title {
+  color: var(--color-text-primary);
+  font-size: var(--type-heading-3);
+  font-weight: 600;
+  margin: 0 0 var(--space-5);
+}
+
+.forced-2fa-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.forced-2fa-page__desc {
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-sm);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.forced-2fa-page__qr-wrapper {
+  align-items: center;
+  background: #fff;
+  border: var(--border-1);
+  border-radius: var(--radius-md);
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.forced-2fa-page__loading {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) 0;
+}
+
+.forced-2fa-page__error {
+  background: var(--color-state-error);
+  border-radius: var(--radius-sm);
+  color: #7a1a1a;
+  font-size: var(--type-body-sm);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.forced-2fa-page__spinner {
+  border: 2px solid rgba(0, 0, 0, 0.15);
+  border-top-color: var(--color-text-secondary);
+  border-radius: 50%;
+  display: inline-block;
+  height: 24px;
+  width: 24px;
+  animation: spin 0.7s linear infinite;
+}
+
+.forced-2fa-page__btn-spinner {
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: var(--color-bg-primary);
+  border-radius: 50%;
+  display: inline-block;
+  height: 14px;
+  width: 14px;
+  animation: spin 0.7s linear infinite;
+}
+
+.forced-2fa-page__footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.forced-2fa-page__submit {
+  align-items: center;
+  background: var(--color-text-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-bg-primary);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-sans);
+  font-size: var(--type-body-md);
+  font-weight: 600;
+  gap: var(--space-2);
+  justify-content: center;
+  letter-spacing: 0.01em;
+  min-height: 44px;
+  padding: var(--space-3) var(--space-6);
+  transition:
+    opacity var(--duration-fast) var(--easing-standard),
+    transform var(--duration-fast) var(--easing-standard);
+  width: 100%;
+}
+
+.forced-2fa-page__submit:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.forced-2fa-page__submit:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.forced-2fa-page__submit:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.forced-2fa-page__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.forced-2fa-page__back {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--type-body-sm);
+  padding: 0;
+  text-align: center;
+  text-decoration: underline;
+}
+
+.forced-2fa-page__back:hover:not(:disabled) {
+  color: var(--color-text-primary);
+}
+
+.forced-2fa-page__logout {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--type-body-sm);
+  margin-top: var(--space-4);
+  padding: 0;
+  text-align: center;
+  text-decoration: underline;
+  width: 100%;
+}
+
+.forced-2fa-page__logout:hover {
+  color: var(--color-text-primary);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

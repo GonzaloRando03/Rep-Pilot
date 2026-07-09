@@ -1,0 +1,43 @@
+.kpi-card {
+  padding: var(--space-4);
+  border: var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+}
+
+.kpi-label {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--type-label);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.kpi-value {
+  margin: 0 0 var(--space-2);
+  font-size: var(--type-heading-2);
+  line-height: 1.3;
+  font-weight: 600;
+  min-height: 1.3em;
+}
+
+.kpi-meta {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-sm);
+}
+
+/* Skeleton loading */
+.kpi-skeleton {
+  display: inline-block;
+  width: 60px;
+  height: 1em;
+  border-radius: var(--radius-sm);
+  background: var(--color-border-soft);
+  animation: kpi-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes kpi-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}

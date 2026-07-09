@@ -1,0 +1,156 @@
+.modal-backdrop {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: var(--space-4);
+  position: fixed;
+  z-index: 100;
+}
+
+.modal-card {
+  background: var(--color-surface-primary);
+  border: var(--border-1);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 480px;
+  padding: var(--space-6);
+  width: 100%;
+}
+
+.modal-card__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-1);
+}
+
+.modal-card__title {
+  color: var(--color-text-primary);
+  font-size: var(--type-heading-3);
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-card__close {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-1);
+  transition:
+    color var(--duration-fast) var(--easing-standard),
+    background var(--duration-fast) var(--easing-standard);
+}
+
+.modal-card__close:hover {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+}
+
+.modal-card__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.modal-field--checkbox {
+  justify-content: flex-end;
+  padding-bottom: var(--space-1);
+}
+
+.modal-label {
+  color: var(--color-text-secondary);
+  font-size: var(--type-label);
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.modal-input {
+  background: var(--color-surface-secondary);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--type-body-md);
+  line-height: 1.5;
+  min-height: 44px;
+  outline: none;
+  padding: var(--space-3) var(--space-4);
+  transition:
+    border-color var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard);
+  width: 100%;
+}
+
+.modal-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.modal-input:hover:not(:disabled) {
+  border-color: var(--color-border-default);
+}
+
+.modal-input:focus {
+  border-color: var(--color-border-default);
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.modal-input--error {
+  border-color: var(--color-state-error);
+}
+
+.modal-input--error:focus {
+  outline-color: var(--color-state-error);
+}
+
+.modal-error {
+  color: var(--color-state-error);
+  filter: brightness(0.6);
+  font-size: var(--type-body-sm);
+  margin: 0;
+}
+
+.modal-checkbox-label {
+  align-items: center;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  font-size: var(--type-body-sm);
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.modal-checkbox {
+  accent-color: var(--color-text-primary);
+  cursor: pointer;
+  height: 16px;
+  width: 16px;
+}
+
+.modal-card__actions {
+  border-top: var(--border-1);
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+}

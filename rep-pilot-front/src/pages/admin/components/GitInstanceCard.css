@@ -1,0 +1,65 @@
+.git-instance-card {
+  background: var(--color-surface-secondary);
+  border: var(--border-1);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.git-instance-card__header {
+  align-items: center;
+  background: var(--color-bg-primary);
+  border-bottom: var(--border-1);
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+}
+
+.git-instance-card__label {
+  color: var(--color-text-secondary);
+  font-size: var(--type-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.git-instance-card__remove {
+  align-items: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-1);
+  transition: color var(--duration-fast) var(--easing-standard);
+}
+
+.git-instance-card__remove:hover {
+  color: var(--color-state-error);
+  filter: brightness(0.6);
+}
+
+.git-instance-card__remove:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+.git-instance-card__fields {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: var(--space-4);
+}
+
+@media (max-width: 900px) {
+  .git-instance-card__fields {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .git-instance-card__fields {
+    grid-template-columns: 1fr;
+  }
+}

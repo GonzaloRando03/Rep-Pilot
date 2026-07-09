@@ -1,0 +1,115 @@
+.resource-card {
+  padding: var(--space-4);
+  border: var(--border-1);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition:
+    transform var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard);
+}
+
+.resource-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-2);
+}
+
+.resource-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+/* Type badge */
+.resource-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  font-size: var(--type-label);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.resource-type-badge--MCP {
+  background: rgba(100, 160, 220, 0.12);
+  color: #7bafd4;
+}
+
+.resource-type-badge--AGENT {
+  background: rgba(100, 200, 130, 0.12);
+  color: #6db87a;
+}
+
+.resource-type-badge--SKILL {
+  background: rgba(220, 185, 80, 0.12);
+  color: #c9a84c;
+}
+
+.resource-type-badge--INSTRUCTION {
+  background: rgba(170, 130, 220, 0.12);
+  color: #a98cd4;
+}
+
+.resource-type-badge--KIT {
+  background: rgba(220, 130, 100, 0.12);
+  color: #d4826b;
+}
+
+/* Stars */
+.resource-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--type-body-sm);
+  color: var(--color-text-secondary);
+}
+
+.resource-card h4 {
+  margin: 0;
+  font-size: var(--type-heading-3);
+  line-height: 1.35;
+}
+
+.resource-description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-md);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.resource-date {
+  margin: 0;
+  font-size: var(--type-body-sm);
+  color: var(--color-text-secondary);
+  margin-top: auto;
+}
+
+.resource-card--clickable {
+  cursor: pointer;
+}
+
+.resource-card--clickable:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* Skeleton */
+.resource-card--skeleton {
+  pointer-events: none;
+}

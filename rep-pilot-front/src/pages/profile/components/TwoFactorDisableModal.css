@@ -1,0 +1,21 @@
+.tfa-disable-modal__desc {
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-sm);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.tfa-disable-modal__error {
+  background: var(--color-state-error);
+  border-radius: var(--radius-sm);
+  color: #7a1a1a;
+  font-size: var(--type-body-sm);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.tfa-disable-modal__footer {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}

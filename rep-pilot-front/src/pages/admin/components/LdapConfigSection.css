@@ -1,0 +1,77 @@
+.ldap-section {
+  background: var(--color-surface-primary);
+  border: var(--border-1);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.ldap-section__header {
+  border-bottom: var(--border-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-6);
+}
+
+.ldap-section__title {
+  color: var(--color-text-primary);
+  font-size: var(--type-heading-3);
+  font-weight: 600;
+  margin: 0;
+}
+
+.ldap-section__subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-sm);
+  margin: 0;
+}
+
+.ldap-section__fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  padding: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .ldap-section__fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ldap-section__field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ldap-section__field-desc {
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-sm);
+  margin: 0;
+}
+
+.ldap-section__help {
+  align-items: flex-start;
+  background: var(--color-surface-secondary);
+  border: var(--border-1);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  display: flex;
+  font-size: var(--type-body-sm);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+
+.ldap-section__help-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+.ldap-section__footer {
+  border-top: var(--border-1);
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--space-4) var(--space-6);
+}

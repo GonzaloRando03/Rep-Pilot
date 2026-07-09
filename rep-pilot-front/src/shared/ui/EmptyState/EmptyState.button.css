@@ -1,0 +1,28 @@
+.deploy-btn {
+  min-height: 40px;
+  border: var(--border-1);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-text-primary);
+  color: var(--color-bg-primary);
+  font-size: var(--type-label);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    opacity var(--duration-fast) var(--easing-standard),
+    transform var(--duration-fast) var(--easing-standard),
+    box-shadow var(--duration-fast) var(--easing-standard);
+}
+
+.deploy-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-1);
+}
+
+.deploy-btn:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
