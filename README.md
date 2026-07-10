@@ -2,7 +2,7 @@
 
 Corporate AI resource repository to centralize, discover, and reuse AI assets across teams.
 
-Official landing page: https://reppilot.gran-ser.com/
+Official page: https://reppilot.gran-ser.com/
 
 ## What is RepPilot
 
