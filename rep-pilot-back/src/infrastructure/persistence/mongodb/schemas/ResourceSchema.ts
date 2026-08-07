@@ -16,6 +16,7 @@ export interface ResourceDocument extends Document<string> {
   tags: string[];
   createdAt: Date;
   createdBy: string;
+  hasFiles: boolean;
 }
 
 const starSchema = new Schema<StarDocument>(
@@ -31,12 +32,13 @@ const resourceSchema = new Schema<ResourceDocument>(
     name: { type: String, required: true },
     type: { type: String, enum: Object.values(ResourceType), required: true },
     description: { type: String, required: true },
-    gitUrl: { type: String, required: true },
+    gitUrl: { type: String, default: "" },
     path: { type: String, default: "" },
     stars: { type: [starSchema], default: [] },
     tags: { type: [String], default: [] },
     createdAt: { type: Date, required: true, default: () => new Date() },
     createdBy: { type: String, required: true },
+    hasFiles: { type: Boolean, default: false },
   },
   { _id: false },
 );

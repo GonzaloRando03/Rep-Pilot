@@ -44,6 +44,14 @@ export function validateUpdateUser(
     errors.push("password must be a non-empty string");
   }
 
+  const email = req.body?.email;
+  if (
+    email !== undefined &&
+    (typeof email !== "string" || email.trim().length === 0)
+  ) {
+    errors.push("email must be a non-empty string if provided");
+  }
+
   if (errors.length > 0) {
     res.status(400).json({ message: "Invalid payload", details: errors });
     return;

@@ -23,6 +23,7 @@ export interface CatalogResource {
   stars: { user: string }[];
   tags: (string | { id: string; name: string })[];
   createdAt: string;
+  hasFiles?: boolean;
 }
 
 export interface ResourceSearchParams {
@@ -105,6 +106,62 @@ export function createResource(
   });
 }
 
+export interface UploadResourcePayload {
+  name: string;
+  type: ResourceType;
+  description: string;
+  path?: string;
+  tags?: string[];
+  files: File[];
+}
+
+export async function uploadResource(
+  payload: UploadResourcePayload,
+): Promise<CatalogResource> {
+  const token = localStorage.getItem("auth_token");
+  const formData = new FormData();
+
+  formData.append(
+    "metadata",
+    JSON.stringify({
+      name: payload.name,
+      type: payload.type,
+      description: payload.description,
+      path: payload.path ?? "",
+      tags: payload.tags ?? [],
+    }),
+  );
+
+  payload.files.forEach((file) => formData.append("files", file));
+
+  const { BASE_URL } = await import("../apiClient");
+  const response = await fetch(`${BASE_URL}/api/resources/upload`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const bodyText = await response.text().catch(() => "");
+    let parsedBody: { message?: string; details?: string[] } = {};
+    try {
+      parsedBody = JSON.parse(bodyText);
+    } catch {
+      /* not JSON */
+    }
+    const message =
+      parsedBody.details?.join(", ") ??
+      parsedBody.message ??
+      bodyText ??
+      response.statusText;
+    throw { status: response.status, message };
+  }
+
+  return response.json() as Promise<CatalogResource>;
+}
+
 export interface ResourceDetail {
   id: string;
   name: string;
@@ -119,6 +176,7 @@ export interface ResourceDetail {
   docMD: string | null;
   owner: string;
   provider: string;
+  hasFiles?: boolean;
 }
 
 export function getResourceById(id: string): Promise<ResourceDetail> {

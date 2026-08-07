@@ -324,6 +324,25 @@
   gap: var(--space-3);
 }
 
+/* Source badge */
+.resource-detail__source-badge {
+  font-size: var(--type-body-xs);
+  font-weight: 500;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.resource-detail__source-badge--files {
+  background: rgba(100, 180, 255, 0.12);
+  color: #8ab4f8;
+}
+
+.resource-detail__source-badge--git {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-secondary);
+}
+
 /* Star button */
 .resource-detail__star-btn {
   display: inline-flex;

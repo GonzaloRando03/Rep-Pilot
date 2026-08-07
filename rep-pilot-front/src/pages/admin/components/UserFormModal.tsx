@@ -14,6 +14,7 @@ interface ModalTranslations {
   fields: {
     name: string;
     username: string;
+    email: string;
     password: string;
     isAdmin: string;
     language: string;
@@ -21,6 +22,7 @@ interface ModalTranslations {
   placeholders: {
     name: string;
     username: string;
+    email: string;
     password: string;
     passwordEdit: string;
   };
@@ -44,6 +46,7 @@ interface UserFormModalProps {
 interface FormState {
   name: string;
   username: string;
+  email: string;
   password: string;
   isAdmin: boolean;
   language: string;
@@ -52,6 +55,7 @@ interface FormState {
 interface FormErrors {
   name?: string;
   username?: string;
+  email?: string;
   password?: string;
 }
 
@@ -68,6 +72,7 @@ export function UserFormModal({
   const [form, setForm] = useState<FormState>({
     name: user?.name ?? "",
     username: user?.username ?? "",
+    email: user?.email ?? "",
     password: "",
     isAdmin: user?.isAdmin ?? false,
     language: user?.language ?? Language.En,
@@ -90,6 +95,7 @@ export function UserFormModal({
     const next: FormErrors = {};
     if (!form.name.trim()) next.name = t.required;
     if (!form.username.trim()) next.username = t.required;
+    if (!isEdit && !form.email.trim()) next.email = t.required;
     if (!isEdit && !form.password.trim()) next.password = t.required;
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -103,6 +109,7 @@ export function UserFormModal({
       const payload: UpdateUserPayload = {
         name: form.name,
         username: form.username,
+        email: form.email,
         isAdmin: form.isAdmin,
         language: form.language as Language,
       };
@@ -113,6 +120,7 @@ export function UserFormModal({
       const payload: CreateUserPayload = {
         name: form.name,
         username: form.username,
+        email: form.email,
         password: form.password,
         isAdmin: form.isAdmin,
         language: form.language as Language,
@@ -184,6 +192,25 @@ export function UserFormModal({
           </div>
 
           <div className="modal-field">
+            <label className="modal-label" htmlFor="user-email">
+              {t.fields.email}
+            </label>
+            <input
+              id="user-email"
+              className={`modal-input${errors.email ? " modal-input--error" : ""}`}
+              type="email"
+              value={form.email}
+              placeholder={t.placeholders.email}
+              onChange={(e) =>
+                setForm((s) => ({ ...s, email: e.target.value }))
+              }
+            />
+            {errors.email && (
+              <span className="modal-error">{errors.email}</span>
+            )}
+          </div>
+
+          <div className="modal-field">
             <label className="modal-label" htmlFor="user-password">
               {t.fields.password}
             </label>
@@ -206,19 +233,19 @@ export function UserFormModal({
           </div>
 
           <div className="modal-field modal-field--checkbox">
-              <label className="modal-checkbox-label" htmlFor="user-isAdmin">
-                <input
-                  id="user-isAdmin"
-                  type="checkbox"
-                  className="modal-checkbox"
-                  checked={form.isAdmin}
-                  onChange={(e) =>
-                    setForm((s) => ({ ...s, isAdmin: e.target.checked }))
-                  }
-                />
-                {t.fields.isAdmin}
-              </label>
-            </div>
+            <label className="modal-checkbox-label" htmlFor="user-isAdmin">
+              <input
+                id="user-isAdmin"
+                type="checkbox"
+                className="modal-checkbox"
+                checked={form.isAdmin}
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, isAdmin: e.target.checked }))
+                }
+              />
+              {t.fields.isAdmin}
+            </label>
+          </div>
 
           <div className="modal-card__actions">
             <button

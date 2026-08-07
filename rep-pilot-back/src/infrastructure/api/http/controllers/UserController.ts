@@ -4,6 +4,9 @@ import { GetMeUseCase } from "../../../../application/ports/in/GetMeUseCase";
 import { ListUsersUseCase } from "../../../../application/ports/in/ListUsersUseCase";
 import { UpdateMyLanguageUseCase } from "../../../../application/ports/in/UpdateMyLanguageUseCase";
 import { UpdateUserUseCase } from "../../../../application/ports/in/UpdateUserUseCase";
+import { CreateApiTokenUseCase } from "../../../../application/ports/in/CreateApiTokenUseCase";
+import { ListApiTokensUseCase } from "../../../../application/ports/in/ListApiTokensUseCase";
+import { RevokeApiTokenUseCase } from "../../../../application/ports/in/RevokeApiTokenUseCase";
 import { AuthenticatedRequest } from "../types/express.d";
 
 export class UserController {
@@ -13,6 +16,9 @@ export class UserController {
     private readonly updateMyLanguageUseCase: UpdateMyLanguageUseCase,
     private readonly listUsersUseCase: ListUsersUseCase,
     private readonly updateUserUseCase: UpdateUserUseCase,
+    private readonly createApiTokenUseCase: CreateApiTokenUseCase,
+    private readonly listApiTokensUseCase: ListApiTokensUseCase,
+    private readonly revokeApiTokenUseCase: RevokeApiTokenUseCase,
   ) {}
 
   create = async (
@@ -27,6 +33,7 @@ export class UserController {
         password: req.body.password,
         isAdmin: req.body.isAdmin,
         language: req.body.language,
+        email: req.body.email,
       });
       res.status(201).json(user);
     } catch (error) {
@@ -90,8 +97,73 @@ export class UserController {
         isAdmin: req.body.isAdmin,
         language: req.body.language,
         password: req.body.password,
+        email: req.body.email,
       });
       res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // ─── API Token endpoints ──────────────────────────────────
+
+  listTokens = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { sub } = (req as AuthenticatedRequest).user;
+      const tokens = await this.listApiTokensUseCase.execute(sub);
+      res.status(200).json(tokens);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  createToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { sub } = (req as AuthenticatedRequest).user;
+
+      const name = req.body.name?.trim();
+      if (!name) {
+        res.status(400).json({ message: "Token name is required" });
+        return;
+      }
+
+      const result = await this.createApiTokenUseCase.execute({
+        userId: sub,
+        name,
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  revokeToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { sub } = (req as AuthenticatedRequest).user;
+      const tokenId = req.params.tokenId as string;
+
+      if (!tokenId?.trim()) {
+        res.status(400).json({ message: "tokenId is required" });
+        return;
+      }
+
+      await this.revokeApiTokenUseCase.execute({
+        userId: sub,
+        tokenId: tokenId.trim(),
+      });
+      res.status(204).send();
     } catch (error) {
       next(error);
     }

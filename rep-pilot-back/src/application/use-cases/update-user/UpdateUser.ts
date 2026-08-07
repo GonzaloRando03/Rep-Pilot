@@ -40,6 +40,7 @@ export class UpdateUser implements UpdateUserUseCase {
       isAdmin: input.isAdmin,
       language,
       password,
+      email: input.email,
     });
 
     await this.userRepository.save(updated);

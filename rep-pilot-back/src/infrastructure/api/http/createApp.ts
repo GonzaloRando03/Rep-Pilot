@@ -12,6 +12,7 @@ import { ResourceController } from "./controllers/ResourceController";
 import { TagController } from "./controllers/TagController";
 import { UserController } from "./controllers/UserController";
 import { TwoFactorController } from "./controllers/TwoFactorController";
+import { ProjectController } from "./controllers/ProjectController";
 import { buildErrorHandler } from "./middlewares/errorHandler";
 import { buildAuthRoutes } from "./routes/authRoutes";
 import { buildChatRoutes } from "./routes/chatRoutes";
@@ -23,6 +24,7 @@ import { buildResourceRoutes } from "./routes/resourceRoutes";
 import { buildTagRoutes } from "./routes/tagRoutes";
 import { buildUserRoutes } from "./routes/userRoutes";
 import { buildTwoFactorRoutes } from "./routes/twoFactorRoutes";
+import { buildProjectRoutes } from "./routes/projectRoutes";
 
 export function createApp(
   resourceController: ResourceController,
@@ -35,6 +37,7 @@ export function createApp(
   projectSetupController: ProjectSetupController,
   generateKitController: GenerateKitController,
   twoFactorController: TwoFactorController,
+  projectController: ProjectController,
   logger: Logger,
 ): Express {
   const app = express();
@@ -63,6 +66,7 @@ export function createApp(
   );
   app.use("/api/generate-kit", buildGenerateKitRoutes(generateKitController));
   app.use("/api/me/2fa", buildTwoFactorRoutes(twoFactorController));
+  app.use("/api/projects", buildProjectRoutes(projectController));
 
   app.use(buildErrorHandler(logger));
 

@@ -4,9 +4,16 @@ import { X } from "lucide-react";
 import { useRepositoryScan } from "../../../shared/hooks/useRepositoryScan";
 import type { RepositoryScanResponse } from "../../../shared/lib/resources/repositoryApi";
 import type { ResourceType } from "../../../shared/lib/resources/resourcesApi";
+import { uploadResource } from "../../../shared/lib/resources/resourcesApi";
+import { createTag, type Tag } from "../../../shared/lib/resources/tagsApi";
+import { useTags } from "../../../shared/hooks/useTags";
+import { toast } from "../../../shared/lib/toast/toastBus";
+import type { ApiError } from "../../../shared/lib/apiClient";
 import type { Translations } from "../../../shared/lib/i18n/Translations";
+import { Step0SourceSelect, type SourceType } from "./Step0SourceSelect";
 import { Step2ModeSelect, type AddMode } from "./Step2ModeSelect";
 import { Step3Review } from "./Step3Review";
+import { StepUploadForm, type UploadFormData } from "./StepUploadForm";
 import type { ResourceDraft } from "./ResourceReviewCard";
 import "./AddResourceModal.css";
 
@@ -38,7 +45,10 @@ function getCommonPath(paths: string[]): string {
 function repoNameFromUrl(url: string): string {
   try {
     const { pathname } = new URL(url);
-    const parts = pathname.replace(/\.git$/, "").split("/").filter(Boolean);
+    const parts = pathname
+      .replace(/\.git$/, "")
+      .split("/")
+      .filter(Boolean);
     return parts[parts.length - 1] ?? url;
   } catch {
     return url;
@@ -81,7 +91,9 @@ function buildDrafts(
     mcp: "MCP",
   };
 
-  const commonPath = getCommonPath(allItems.map((i) => i.path ?? "").filter(Boolean));
+  const commonPath = getCommonPath(
+    allItems.map((i) => i.path ?? "").filter(Boolean),
+  );
 
   return [
     {
@@ -97,8 +109,15 @@ function buildDrafts(
   ];
 }
 
-export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProps) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+export function AddResourceModal({
+  onClose,
+  onSuccess,
+  t,
+}: AddResourceModalProps) {
+  const [sourceType, setSourceType] = useState<SourceType | null>(null);
+
+  // --- Git flow state ---
+  const [gitStep, setGitStep] = useState<1 | 2 | 3>(1);
   const [url, setUrl] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<RepositoryScanResponse | null>(
@@ -106,13 +125,34 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
   );
   const [selectedMode, setSelectedMode] = useState<AddMode | null>(null);
   const [drafts, setDrafts] = useState<ResourceDraft[]>([]);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { scan, isLoading, error: scanError, clearError } = useRepositoryScan();
 
+  // --- Upload flow state ---
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [localTags, setLocalTags] = useState<Tag[]>([]);
+
+  const urlInputRef = useRef<HTMLInputElement>(null);
+  const {
+    scan,
+    isLoading: isScanning,
+    error: scanError,
+    clearError,
+  } = useRepositoryScan();
+  const { tags: fetchedTags } = useTags();
+
+  const availableTags = [
+    ...fetchedTags,
+    ...localTags.filter((lt) => !fetchedTags.some((ft) => ft.id === lt.id)),
+  ];
+
+  // Focus URL input when entering git step 1
   useEffect(() => {
-    if (step === 1) inputRef.current?.focus();
-  }, [step]);
+    if (sourceType === "git" && gitStep === 1) {
+      urlInputRef.current?.focus();
+    }
+  }, [sourceType, gitStep]);
 
+  // Escape to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -121,7 +161,16 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  function validate(): boolean {
+  // ──── Source selection ────
+  function handleSourceSelect(type: SourceType) {
+    setSourceType(type);
+    if (type === "git") {
+      setGitStep(1);
+    }
+  }
+
+  // ──── Git URL validation & scan ────
+  function validateUrl(): boolean {
     if (!url.trim()) {
       setUrlError(t.step1.urlRequired);
       return false;
@@ -134,15 +183,15 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
     return true;
   }
 
-  async function handleStep1Submit(e: React.FormEvent) {
+  async function handleGitUrlSubmit(e: React.FormEvent) {
     e.preventDefault();
     clearError();
-    if (!validate()) return;
+    if (!validateUrl()) return;
 
     const result = await scan(url.trim());
     if (result !== null) {
       setScanResult(result);
-      setStep(2);
+      setGitStep(2);
     }
   }
 
@@ -150,14 +199,69 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
     setSelectedMode(mode);
     const built = buildDrafts(mode, scanResult!, url.trim());
     setDrafts(built);
-    setStep(3);
+    setGitStep(3);
   }
 
-  const stepTitles: Record<1 | 2 | 3, string> = {
-    1: t.modalTitle,
-    2: t.modalTitle,
-    3: t.modalTitle,
-  };
+  // ──── Upload flow ────
+  async function handleCreateTag(name: string): Promise<Tag | null> {
+    try {
+      const created = await createTag({ name });
+      setLocalTags((prev) => [...prev, created]);
+      return created;
+    } catch (err) {
+      const apiErr = err as ApiError;
+      if (apiErr.status === 409) {
+        toast.error(`Tag "${name}" already exists.`);
+      } else {
+        toast.error(`Could not create tag "${name}".`);
+      }
+      return null;
+    }
+  }
+
+  async function handleUploadSubmit(data: UploadFormData) {
+    setIsUploading(true);
+    setUploadError(null);
+    try {
+      await uploadResource({
+        name: data.name,
+        type: data.type,
+        description: data.description,
+        tags: data.tags.length > 0 ? data.tags : undefined,
+        files: data.files,
+      });
+      toast.success(t.stepUpload.successMessage);
+      onSuccess?.() ?? onClose();
+    } catch (err) {
+      const apiErr = err as ApiError;
+      setUploadError(apiErr.message ?? t.stepUpload.errorMessage);
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  function handleUploadCancel() {
+    setSourceType(null);
+  }
+
+  // ──── Step badge & title ────
+  function getStepLabel(): string {
+    if (!sourceType) return t.step(1, 3);
+    if (sourceType === "git") {
+      return t.step(gitStep + 1, 4);
+    }
+    // upload: step 2 of 3 (source selection was step 1)
+    return t.step(2, 3);
+  }
+
+  function getStepTitle(): string {
+    if (!sourceType) return t.step0.modalTitle;
+    if (sourceType === "upload") return t.stepUpload.modalTitle;
+    return t.modalTitle;
+  }
+
+  // ──── Render ────
+  const isGitReviewStep = sourceType === "git" && gitStep === 3;
 
   return (
     <div
@@ -169,15 +273,17 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className={`add-resource-card${step === 3 ? " add-resource-card--wide" : ""}`}>
+      <div
+        className={`add-resource-card${isGitReviewStep ? " add-resource-card--wide" : ""}`}
+      >
         {/* Header */}
         <div className="add-resource-card__header">
           <div className="add-resource-card__title-group">
             <span className="add-resource-card__step-badge">
-              {t.step(step, 3)}
+              {getStepLabel()}
             </span>
             <h2 id="add-resource-title" className="add-resource-card__title">
-              {stepTitles[step]}
+              {getStepTitle()}
             </h2>
           </div>
           <button
@@ -190,11 +296,27 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
           </button>
         </div>
 
-        {/* Step 1 */}
-        {step === 1 && (
+        {/* ── Step 0: Source selection ── */}
+        {!sourceType && (
+          <div className="add-resource-card__form">
+            <Step0SourceSelect t={t.step0} onSelect={handleSourceSelect} />
+            <div className="add-resource-card__actions">
+              <button
+                type="button"
+                className="add-resource-btn add-resource-btn--secondary"
+                onClick={onClose}
+              >
+                {t.step1.cancelButton}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Git: Step 1 (URL) ── */}
+        {sourceType === "git" && gitStep === 1 && (
           <form
             className="add-resource-card__form"
-            onSubmit={handleStep1Submit}
+            onSubmit={handleGitUrlSubmit}
             noValidate
           >
             <div className="add-resource-step1">
@@ -217,7 +339,7 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
                   {t.step1.urlLabel}
                 </label>
                 <input
-                  ref={inputRef}
+                  ref={urlInputRef}
                   id="add-resource-url"
                   type="url"
                   className={`add-resource-input${urlError ? " add-resource-input--error" : ""}`}
@@ -228,7 +350,7 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
                     if (urlError) setUrlError(null);
                     if (scanError) clearError();
                   }}
-                  disabled={isLoading}
+                  disabled={isScanning}
                   aria-describedby={
                     urlError
                       ? "add-resource-url-error"
@@ -266,30 +388,30 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
               <button
                 type="button"
                 className="add-resource-btn add-resource-btn--secondary"
-                onClick={onClose}
-                disabled={isLoading}
+                onClick={() => setSourceType(null)}
+                disabled={isScanning}
               >
-                {t.step1.cancelButton}
+                {t.step3.backButton}
               </button>
               <button
                 type="submit"
                 className="add-resource-btn add-resource-btn--primary"
-                disabled={isLoading}
-                aria-busy={isLoading}
+                disabled={isScanning}
+                aria-busy={isScanning}
               >
-                {isLoading ? (
+                {isScanning ? (
                   <span className="add-resource-spinner" aria-hidden="true" />
                 ) : (
                   <ArrowRight size={14} aria-hidden="true" />
                 )}
-                {isLoading ? t.step1.scanning : t.step1.scanButton}
+                {isScanning ? t.step1.scanning : t.step1.scanButton}
               </button>
             </div>
           </form>
         )}
 
-        {/* Step 2 */}
-        {step === 2 && scanResult && (
+        {/* ── Git: Step 2 (Mode select) ── */}
+        {sourceType === "git" && gitStep === 2 && scanResult && (
           <div className="add-resource-card__form">
             <Step2ModeSelect
               scanResult={scanResult}
@@ -300,7 +422,7 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
               <button
                 type="button"
                 className="add-resource-btn add-resource-btn--secondary"
-                onClick={() => setStep(1)}
+                onClick={() => setGitStep(1)}
               >
                 {t.step3.backButton}
               </button>
@@ -308,15 +430,36 @@ export function AddResourceModal({ onClose, onSuccess, t }: AddResourceModalProp
           </div>
         )}
 
-        {/* Step 3 */}
-        {step === 3 && selectedMode && (
+        {/* ── Git: Step 3 (Review) ── */}
+        {sourceType === "git" && gitStep === 3 && selectedMode && (
           <Step3Review
             drafts={drafts}
             isIndividualMode={selectedMode === "individual"}
             t={t.step3}
-            onBack={() => setStep(2)}
+            onBack={() => setGitStep(2)}
             onDone={onSuccess ?? onClose}
           />
+        )}
+
+        {/* ── Upload: Form ── */}
+        {sourceType === "upload" && (
+          <div className="add-resource-card__form">
+            {uploadError && (
+              <div className="add-resource-scan-error" role="alert">
+                <AlertTriangle size={14} aria-hidden="true" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+            <StepUploadForm
+              t={t.stepUpload}
+              tStep3={t.step3}
+              availableTags={availableTags}
+              onCreateTag={handleCreateTag}
+              onSubmit={handleUploadSubmit}
+              onCancel={handleUploadCancel}
+              isSubmitting={isUploading}
+            />
+          </div>
         )}
       </div>
     </div>

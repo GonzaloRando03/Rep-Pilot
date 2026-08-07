@@ -20,8 +20,13 @@ function setup() {
   const cr = mockConfigRepository();
   const gp = mockGitProvider();
   const gf = { getProvider: vi.fn().mockReturnValue(gp) };
-  const useCase = new GetResourceById(rr, tr, ur, cr, gf);
-  return { useCase, rr, tr, ur, cr, gp, gf };
+  const fs = {
+    saveFiles: vi.fn(),
+    getFiles: vi.fn().mockResolvedValue([]),
+    deleteFiles: vi.fn(),
+  };
+  const useCase = new GetResourceById(rr, tr, ur, cr, gf, fs);
+  return { useCase, rr, tr, ur, cr, gp, gf, fs };
 }
 
 describe("GetResourceById", () => {

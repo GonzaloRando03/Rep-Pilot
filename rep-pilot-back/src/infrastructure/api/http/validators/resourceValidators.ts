@@ -18,6 +18,60 @@ export function validateCreateResource(
   next();
 }
 
+export function validateCreateResourceFromUpload(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
+  // Parse metadata from the "metadata" multipart field
+  let metadata: Record<string, unknown>;
+  try {
+    metadata = JSON.parse(req.body.metadata ?? "{}");
+  } catch {
+    res.status(400).json({
+      message: "Invalid payload",
+      details: ["metadata must be a valid JSON string"],
+    });
+    return;
+  }
+
+  const errors: string[] = [];
+
+  if (typeof metadata.name !== "string" || metadata.name.trim().length === 0) {
+    errors.push("metadata.name is required and must be a non-empty string");
+  }
+
+  if (
+    !metadata.type ||
+    !Object.values(ResourceType).includes(metadata.type as ResourceType)
+  ) {
+    errors.push(
+      `metadata.type is required and must be one of: ${Object.values(ResourceType).join(", ")}`,
+    );
+  }
+
+  if (
+    typeof metadata.description !== "string" ||
+    metadata.description.trim().length === 0
+  ) {
+    errors.push(
+      "metadata.description is required and must be a non-empty string",
+    );
+  }
+
+  const files = req.files as Express.Multer.File[] | undefined;
+  if (!files || files.length === 0) {
+    errors.push("at least one file is required");
+  }
+
+  if (errors.length > 0) {
+    res.status(400).json({ message: "Invalid payload", details: errors });
+    return;
+  }
+
+  next();
+}
+
 export function validateSearchResources(
   req: Request,
   res: Response,

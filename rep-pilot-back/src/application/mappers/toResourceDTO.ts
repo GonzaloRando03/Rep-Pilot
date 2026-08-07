@@ -25,5 +25,6 @@ export function toResourceDTO(
       username: creatorInfo?.username ?? resource.createdBy,
       name: creatorInfo?.name ?? resource.createdBy,
     },
+    hasFiles: resource.hasFiles,
   };
 }

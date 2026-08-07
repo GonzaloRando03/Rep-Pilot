@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/private/rep-pilot-vscode"
+      ],
+      "outFiles": ["${workspaceFolder}/private/rep-pilot-vscode/dist/**/*.js"],
+      "preLaunchTask": "npm: build - rep-pilot-vscode"
+    }
+  ]
+}

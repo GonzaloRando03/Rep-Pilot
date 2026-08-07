@@ -14,8 +14,9 @@ function setup() {
   const cr = mockConfigRepository();
   const gp = mockGitProvider();
   const gf = { getProvider: vi.fn().mockReturnValue(gp) };
-  const useCase = new DownloadResource(rr, cr, gf);
-  return { useCase, rr, cr, gp, gf };
+  const fs = { saveFiles: vi.fn(), getFiles: vi.fn(), deleteFiles: vi.fn() };
+  const useCase = new DownloadResource(rr, cr, gf, fs);
+  return { useCase, rr, cr, gp, gf, fs };
 }
 
 describe("DownloadResource", () => {

@@ -4,6 +4,7 @@ import {
   DownloadResult,
 } from "../../ports/in/DownloadResourceUseCase";
 import { ResourceRepository } from "../../ports/out/ResourceRepository";
+import { ResourceFileStorage } from "../../ports/out/ResourceFileStorage";
 import { ConfigRepository } from "../../ports/out/ConfigRepository";
 import { GitProviderFactoryPort } from "../scan-repository/ScanRepository";
 import { ResourceType } from "../../../domain/enums/ResourceType";
@@ -15,6 +16,7 @@ export class DownloadResource implements DownloadResourceUseCase {
     private readonly resourceRepository: ResourceRepository,
     private readonly configRepository: ConfigRepository,
     private readonly gitProviderFactory: GitProviderFactoryPort,
+    private readonly fileStorage: ResourceFileStorage,
   ) {}
 
   async execute(resourceId: string): Promise<DownloadResult> {
@@ -23,6 +25,45 @@ export class DownloadResource implements DownloadResourceUseCase {
       throw new NotFoundError(`Resource with id '${resourceId}' not found`);
     }
 
+    if (resource.hasFiles) {
+      return this.downloadFromDisk(resource.name, resourceId);
+    }
+
+    return this.downloadFromGit(resource);
+  }
+
+  private async downloadFromDisk(
+    resourceName: string,
+    resourceId: string,
+  ): Promise<DownloadResult> {
+    const files = await this.fileStorage.getFiles(resourceId);
+
+    const zip = new JSZip();
+    for (const file of files) {
+      zip.file(file.path, file.content);
+    }
+
+    const zipBuffer = await zip.generateAsync({
+      type: "nodebuffer",
+      compression: "DEFLATE",
+    });
+
+    if (zipBuffer.length <= 22) {
+      throw new Error(
+        `No downloadable files found for resource '${resourceName}'`,
+      );
+    }
+
+    const filename = `${resourceName}.zip`;
+    return { buffer: zipBuffer, filename };
+  }
+
+  private async downloadFromGit(resource: {
+    name: string;
+    type: ResourceType;
+    path: string;
+    gitUrl: string;
+  }): Promise<DownloadResult> {
     const token = await this.resolveToken(resource.gitUrl);
     const provider = this.gitProviderFactory.getProvider(resource.gitUrl);
 

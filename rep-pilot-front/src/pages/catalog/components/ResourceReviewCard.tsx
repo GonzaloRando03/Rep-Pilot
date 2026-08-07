@@ -15,6 +15,8 @@ export interface ResourceDraft {
   path: string;
   tags: string[];
   selected: boolean;
+  hasFiles?: boolean;
+  files?: File[];
 }
 
 interface ResourceReviewCardProps {
@@ -27,7 +29,7 @@ interface ResourceReviewCardProps {
   t: Translations["catalog"]["addResource"]["step3"];
 }
 
-function TagPicker({
+export function TagPicker({
   availableTags,
   selected,
   onChange,

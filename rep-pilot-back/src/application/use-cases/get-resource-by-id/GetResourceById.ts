@@ -1,6 +1,7 @@
 import { GetResourceByIdUseCase } from "../../ports/in/GetResourceByIdUseCase";
 import { ResourceDetailDTO } from "../../dto/ResourceDetailDTO";
 import { ResourceRepository } from "../../ports/out/ResourceRepository";
+import { ResourceFileStorage } from "../../ports/out/ResourceFileStorage";
 import { TagRepository } from "../../ports/out/TagRepository";
 import { UserRepository } from "../../ports/out/UserRepository";
 import { ConfigRepository } from "../../ports/out/ConfigRepository";
@@ -22,6 +23,7 @@ export class GetResourceById implements GetResourceByIdUseCase {
     private readonly userRepository: UserRepository,
     private readonly configRepository: ConfigRepository,
     private readonly gitProviderFactory: GitProviderFactoryPort,
+    private readonly fileStorage: ResourceFileStorage,
   ) {}
 
   async execute(id: string): Promise<ResourceDetailDTO> {
@@ -38,9 +40,26 @@ export class GetResourceById implements GetResourceByIdUseCase {
 
     const tagMap = new Map(allTags.map((t) => [t.id.toString(), t.name]));
     const userMap = new Map(
-      allUsers.map((u) => [u.id.toString(), { username: u.username, name: u.name }]),
+      allUsers.map((u) => [
+        u.id.toString(),
+        { username: u.username, name: u.name },
+      ]),
     );
     const baseDTO = toResourceDTO(resource, tagMap, userMap);
+
+    if (resource.hasFiles) {
+      const docMD = await this.resolveDocFromFiles(
+        id,
+        resource.type,
+        resource.path,
+      );
+      return {
+        ...baseDTO,
+        docMD,
+        owner: null,
+        provider: null,
+      };
+    }
 
     const provider = this.gitProviderFactory.getProvider(resource.gitUrl);
     const { owner, provider: providerName } = provider.getRepoOwner(
@@ -92,5 +111,43 @@ export class GetResourceById implements GetResourceByIdUseCase {
   ): string | undefined {
     const match = gitInstances.find((g) => repoUrl.startsWith(g.url));
     return match?.token;
+  }
+
+  /**
+   * Para recursos subidos (hasFiles=true), aplica la misma lógica de
+   * resolución de documentación que fetchDocMD usa con repositorios git:
+   * - SKILL / INSTRUCTION → el fichero apuntado por resource.path
+   * - resto de tipos     → README.md (o variantes)
+   * - fallback           → si hay un único .md, se usa ese
+   */
+  private async resolveDocFromFiles(
+    resourceId: string,
+    type: ResourceType,
+    filePath: string,
+  ): Promise<string | null> {
+    const files = await this.fileStorage.getFiles(resourceId);
+    const mdFiles = files.filter((f) => f.path.endsWith(".md"));
+
+    // 1. SKILL / INSTRUCTION → buscar el fichero exacto en resource.path
+    if (TYPES_WITH_OWN_FILE.has(type) && filePath) {
+      const match = mdFiles.find((f) => f.path === filePath);
+      if (match) return match.content;
+      return null;
+    }
+
+    // 2. Resto de tipos → buscar README.md (o variantes)
+    for (const candidate of README_CANDIDATES) {
+      const match = mdFiles.find(
+        (f) => f.path === candidate || f.path.endsWith(`/${candidate}`),
+      );
+      if (match) return match.content;
+    }
+
+    // 3. Fallback: si hay exactamente un .md, lo usamos
+    if (mdFiles.length === 1) {
+      return mdFiles[0].content;
+    }
+
+    return null;
   }
 }

@@ -6,6 +6,7 @@ export interface User {
   id: string;
   username: string;
   name: string;
+  email: string;
   isAdmin: boolean;
   language: Language;
   twoFactorEnabled: boolean;

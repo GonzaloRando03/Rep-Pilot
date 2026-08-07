@@ -31,6 +31,7 @@ export class CreateUser implements CreateUserUseCase {
       password: hashedPassword,
       isAdmin: input.isAdmin ?? false,
       language,
+      email: input.email,
     });
 
     await this.userRepository.save(user);

@@ -4,6 +4,7 @@ export interface CreateUserDTO {
   password: string;
   isAdmin?: boolean;
   language?: string;
+  email?: string;
 }
 
 export interface UserDTO {
@@ -13,6 +14,7 @@ export interface UserDTO {
   isAdmin: boolean;
   language: string;
   twoFactorEnabled: boolean;
+  email?: string;
 }
 
 export interface UpdateUserDTO {
@@ -21,4 +23,5 @@ export interface UpdateUserDTO {
   isAdmin?: boolean;
   language?: string;
   password?: string;
+  email?: string;
 }

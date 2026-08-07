@@ -61,6 +61,8 @@ export interface Translations {
     dashboard: string;
     catalogo: string;
     iaKit: string;
+    projects: string;
+    projectsDetail: string;
     documentation: string;
     admin: string;
   };
@@ -169,6 +171,7 @@ export interface Translations {
       table: {
         name: string;
         username: string;
+        email: string;
         language: string;
         role: string;
         actions: string;
@@ -186,6 +189,7 @@ export interface Translations {
         fields: {
           name: string;
           username: string;
+          email: string;
           password: string;
           isAdmin: string;
           language: string;
@@ -193,6 +197,7 @@ export interface Translations {
         placeholders: {
           name: string;
           username: string;
+          email: string;
           password: string;
           passwordEdit: string;
         };
@@ -226,6 +231,8 @@ export interface Translations {
     openRepo: string;
     download: string;
     downloading: string;
+    localFiles: string;
+    gitRepo: string;
     noDoc: string;
     star: string;
     unstar: string;
@@ -266,6 +273,7 @@ export interface Translations {
   profile: {
     pageTitle: string;
     username: string;
+    email: string;
     role: string;
     roleAdmin: string;
     roleUser: string;
@@ -317,6 +325,25 @@ export interface Translations {
         successMessage: string;
       };
     };
+    tokens: {
+      title: string;
+      description: string;
+      oneTimeWarning: string;
+      copyButton: string;
+      copied: string;
+      copyError: string;
+      dismiss: string;
+      namePlaceholder: string;
+      createButton: string;
+      creating: string;
+      loading: string;
+      loadError: string;
+      empty: string;
+      lastUsed: string;
+      created: string;
+      neverUsed: string;
+      revoke: string;
+    };
   };
   catalog: {
     searchPlaceholder: string;
@@ -340,6 +367,12 @@ export interface Translations {
       buttonLabel: string;
       modalTitle: string;
       step: (current: number, total: number) => string;
+      step0: {
+        modalTitle: string;
+        heading: string;
+        git: { title: string; description: string };
+        upload: { title: string; description: string };
+      };
       step1: {
         heading: string;
         description: string;
@@ -385,7 +418,153 @@ export interface Translations {
         noTagsFound: string;
         tagsRequired: string;
         includeLabel: string;
+        removeTagAriaLabel?: string;
+        addTagAriaLabel?: string;
       };
+      stepUpload: {
+        modalTitle: string;
+        typeLabel: string;
+        pathLabel: string;
+        pathPlaceholder: string;
+        filesLabel: string;
+        filesRequired: string;
+        dropzoneAriaLabel: string;
+        dropzoneText: string;
+        dropzoneHint: string;
+        removeFileAriaLabel: string;
+        nameRequired: string;
+        descriptionRequired: string;
+        submitButton: string;
+        submitting: string;
+        cancelButton: string;
+        successMessage: string;
+        errorMessage: string;
+      };
+    };
+  };
+  projects: {
+    title: string;
+    subtitle: string;
+    createButton: string;
+    emptyTitle: string;
+    emptyDescription: string;
+    createSuccess: string;
+    createError: string;
+    loadError: string;
+    errorTitle: string;
+    errorDescription: string;
+    gridAriaLabel: string;
+    ungroupedLabel: string;
+    card: {
+      membersCount: (n: number) => string;
+      createdBy: string;
+    };
+    detail: {
+      backButton: string;
+      loading: string;
+      notFound: string;
+      detailNotFound: string;
+      createdBy: string;
+      membersTitle: string;
+      filesTitle: string;
+      filterAll: string;
+      filterByTypeAria: string;
+      noFilesFound: string;
+      prevPage: string;
+      nextPage: string;
+      pageInfo: (page: number, totalPages: number, total: number) => string;
+      paginationAria: string;
+      fileViewer: {
+        closeAriaLabel: string;
+        loading: string;
+        loadError: string;
+        openFileAria: string;
+      };
+      directoryTreeTitle: string;
+      downloadConf: string;
+      downloadConfTooltip: string;
+      editButton: string;
+      deleteButton: string;
+      editSuccess: string;
+      editError: string;
+      deleteSuccess: string;
+      deleteError: string;
+      editModal: {
+        title: string;
+        closeAriaLabel: string;
+        nameLabel: string;
+        namePlaceholder: string;
+        nameRequired: string;
+        membersLabel: string;
+        membersSearchPlaceholder: string;
+        membersSearchAria: string;
+        selectedMembersAria: string;
+        removeMemberAria: (name: string) => string;
+        membersRequired: string;
+        loadingUsers: string;
+        noUsersFound: string;
+        currentFilesLabel: string;
+        noFiles: string;
+        removeFileAria: (name: string) => string;
+        addFilesLabel: string;
+        dropZoneAria: string;
+        dropZonePlaceholder: string;
+        dropZoneHint: string;
+        dropFolderRequired: string;
+        dropNoTextFiles: string;
+        dropNoRequiredFiles: string;
+        groupLabel: string;
+        groupPlaceholder: string;
+        groupCreateLabel: string;
+        groupLoadingText: string;
+        groupNoResultsText: string;
+        saveButton: string;
+        saving: string;
+        cancelButton: string;
+      };
+      deleteModal: {
+        title: string;
+        message: (name: string) => string;
+        confirmButton: string;
+        confirming: string;
+        cancelButton: string;
+      };
+    };
+    modal: {
+      title: string;
+      closeAriaLabel: string;
+      nameLabel: string;
+      namePlaceholder: string;
+      nameRequired: string;
+      rootFolderLabel: string;
+      rootFolderPlaceholder: string;
+      rootFolderRequired: string;
+      membersLabel: string;
+      membersSearchPlaceholder: string;
+      membersSearchAria: string;
+      selectedMembersAria: string;
+      removeMemberAria: (name: string) => string;
+      membersRequired: string;
+      loadingUsers: string;
+      noUsersFound: string;
+      dropZoneLabel: string;
+      dropZoneAria: string;
+      dropZonePlaceholder: string;
+      dropZoneHint: string;
+      dropFolderRequired: string;
+      dropNoTextFiles: string;
+      dropNoRequiredFiles: string;
+      filesDetected: (count: number) => string;
+      andMore: (count: number) => string;
+      clearFiles: string;
+      submitButton: string;
+      creating: string;
+      cancelButton: string;
+      groupLabel: string;
+      groupPlaceholder: string;
+      groupCreateLabel: string;
+      groupLoadingText: string;
+      groupNoResultsText: string;
     };
   };
   iaKit: {
@@ -408,6 +587,35 @@ export interface Translations {
     kitCreated: string;
     downloadKit: string;
     generationError: string;
+    createProjectButton: string;
+    createProjectModal: {
+      title: string;
+      closeAriaLabel: string;
+      nameLabel: string;
+      namePlaceholder: string;
+      nameRequired: string;
+      rootFolderLabel: string;
+      rootFolderPlaceholder: string;
+      rootFolderDetected: string;
+      membersLabel: string;
+      membersSearchPlaceholder: string;
+      membersSearchAria: string;
+      selectedMembersAria: string;
+      removeMemberAria: (name: string) => string;
+      membersRequired: string;
+      loadingUsers: string;
+      noUsersFound: string;
+      submitButton: string;
+      creating: string;
+      cancelButton: string;
+      createSuccess: string;
+      createError: string;
+      groupLabel: string;
+      groupPlaceholder: string;
+      groupCreateLabel: string;
+      groupLoadingText: string;
+      groupNoResultsText: string;
+    };
   };
 }
 

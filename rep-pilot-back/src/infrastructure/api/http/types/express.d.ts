@@ -1,9 +1,12 @@
 import { Request } from "express";
 
+export type AuthMethod = "jwt" | "api-token";
+
 export interface AuthenticatedUser {
   sub: string;
   username: string;
   isAdmin: boolean;
+  authMethod: AuthMethod;
 }
 
 declare global {

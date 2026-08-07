@@ -229,6 +229,49 @@
   outline-offset: 2px;
 }
 
+/* Kit actions row */
+.kit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.kit-actions .download-button,
+.kit-actions .create-project-button {
+  margin-top: 0;
+}
+
+/* Create project button — secondary variant */
+.create-project-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: transparent;
+  color: var(--color-text-primary);
+  border: var(--border-1);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-size: var(--type-body-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard),
+    transform var(--duration-fast) var(--easing-standard);
+}
+
+.create-project-button:hover {
+  background: var(--color-surface-secondary);
+  border-color: var(--color-text-primary);
+}
+
+.create-project-button:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
 /* Specs input area — fila horizontal: textarea + botón a la derecha */
 .specs-input-area {
   display: flex;

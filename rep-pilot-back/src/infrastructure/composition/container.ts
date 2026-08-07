@@ -1,4 +1,5 @@
 import { CreateResource } from "../../application/use-cases/create-resource/CreateResource";
+import { CreateResourceFromUpload } from "../../application/use-cases/create-resource-from-upload/CreateResourceFromUpload";
 import { CreateTag } from "../../application/use-cases/create-tag/CreateTag";
 import { CreateUser } from "../../application/use-cases/create-user/CreateUser";
 import { DeleteResource } from "../../application/use-cases/delete-resource/DeleteResource";
@@ -26,6 +27,18 @@ import { GenerateKit } from "../../application/use-cases/generate-kit/GenerateKi
 import { SetupTwoFactor } from "../../application/use-cases/setup-two-factor/SetupTwoFactor";
 import { ConfirmTwoFactor } from "../../application/use-cases/confirm-two-factor/ConfirmTwoFactor";
 import { DisableTwoFactor } from "../../application/use-cases/disable-two-factor/DisableTwoFactor";
+import { CreateProject } from "../../application/use-cases/create-project/CreateProject";
+import { UpdateProject } from "../../application/use-cases/update-project/UpdateProject";
+import { DeleteProject } from "../../application/use-cases/delete-project/DeleteProject";
+import { GetProjectById } from "../../application/use-cases/get-project-by-id/GetProjectById";
+import { ListProjects } from "../../application/use-cases/list-projects/ListProjects";
+import { GetProjectFile } from "../../application/use-cases/get-project-file/GetProjectFile";
+import { ListProjectGroups } from "../../application/use-cases/list-project-groups/ListProjectGroups";
+import { CreateApiToken } from "../../application/use-cases/create-api-token/CreateApiToken";
+import { ListApiTokens } from "../../application/use-cases/list-api-tokens/ListApiTokens";
+import { RevokeApiToken } from "../../application/use-cases/revoke-api-token/RevokeApiToken";
+import { GetAllProjectFiles } from "../../application/use-cases/get-all-project-files/GetAllProjectFiles";
+import { SyncProjectFiles } from "../../application/use-cases/sync-project-files/SyncProjectFiles";
 import { Language } from "../../domain/enums/Language";
 import { OpenAiLlmProvider } from "../llm/OpenAiLlmProvider";
 import { AuthController } from "../api/http/controllers/AuthController";
@@ -38,7 +51,9 @@ import { ResourceController } from "../api/http/controllers/ResourceController";
 import { TagController } from "../api/http/controllers/TagController";
 import { UserController } from "../api/http/controllers/UserController";
 import { TwoFactorController } from "../api/http/controllers/TwoFactorController";
+import { ProjectController } from "../api/http/controllers/ProjectController";
 import { createApp } from "../api/http/createApp";
+import { setAuthRepositories } from "../api/http/middlewares/authenticate";
 import { GitProviderFactory } from "../git/GitProviderFactory";
 import { ConsoleLogger } from "../logging/ConsoleLogger";
 import { withLogging } from "../logging/withLogging";
@@ -46,6 +61,10 @@ import { MongoConfigRepository } from "../persistence/repositories/MongoConfigRe
 import { MongoResourceRepository } from "../persistence/repositories/MongoResourceRepository";
 import { MongoTagRepository } from "../persistence/repositories/MongoTagRepository";
 import { MongoUserRepository } from "../persistence/repositories/MongoUserRepository";
+import { MongoProjectRepository } from "../persistence/repositories/MongoProjectRepository";
+import { MongoApiTokenRepository } from "../persistence/repositories/MongoApiTokenRepository";
+import { DiskProjectFileStorage } from "../storage/DiskProjectFileStorage";
+import { DiskResourceFileStorage } from "../storage/DiskResourceFileStorage";
 import { BcryptPasswordHasher } from "../security/BcryptPasswordHasher";
 import { JwtTokenService } from "../security/JwtTokenService";
 import { AesTokenEncryptor } from "../security/AesTokenEncryptor";
@@ -76,6 +95,10 @@ export function buildHttpApp() {
   const userRepository = new MongoUserRepository(tokenEncryptor);
   const tagRepository = new MongoTagRepository();
   const configRepository = new MongoConfigRepository(tokenEncryptor);
+  const projectRepository = new MongoProjectRepository();
+  const projectFileStorage = new DiskProjectFileStorage();
+  const resourceFileStorage = new DiskResourceFileStorage();
+  const apiTokenRepository = new MongoApiTokenRepository();
   const passwordHasher = new BcryptPasswordHasher();
   const tokenService = new JwtTokenService(getJwtSecret());
   const defaultLanguage = resolveDefaultLanguage();
@@ -86,6 +109,16 @@ export function buildHttpApp() {
   const createResource = withLogging(
     new CreateResource(resourceRepository, tagRepository, userRepository),
     "CreateResource",
+    logger,
+  );
+  const createResourceFromUpload = withLogging(
+    new CreateResourceFromUpload(
+      resourceRepository,
+      resourceFileStorage,
+      tagRepository,
+      userRepository,
+    ),
+    "CreateResourceFromUpload",
     logger,
   );
   const listResources = withLogging(
@@ -119,6 +152,7 @@ export function buildHttpApp() {
       userRepository,
       configRepository,
       gitProviderFactory,
+      resourceFileStorage,
     ),
     "GetResourceById",
     logger,
@@ -133,6 +167,7 @@ export function buildHttpApp() {
       resourceRepository,
       configRepository,
       gitProviderFactory,
+      resourceFileStorage,
     ),
     "DownloadResource",
     logger,
@@ -196,6 +231,24 @@ export function buildHttpApp() {
     "UpdateUser",
     logger,
   );
+
+  // API token use cases
+  const createApiToken = withLogging(
+    new CreateApiToken(apiTokenRepository, userRepository),
+    "CreateApiToken",
+    logger,
+  );
+  const listApiTokens = withLogging(
+    new ListApiTokens(apiTokenRepository),
+    "ListApiTokens",
+    logger,
+  );
+  const revokeApiToken = withLogging(
+    new RevokeApiToken(apiTokenRepository),
+    "RevokeApiToken",
+    logger,
+  );
+
   const scanRepository = withLogging(
     new ScanRepository(
       gitProviderFactory,
@@ -236,6 +289,7 @@ export function buildHttpApp() {
 
   const resourceController = new ResourceController(
     createResource,
+    createResourceFromUpload,
     listResources,
     getResourceSummary,
     getResourceHighlights,
@@ -253,6 +307,9 @@ export function buildHttpApp() {
     updateMyLanguage,
     listUsers,
     updateUser,
+    createApiToken,
+    listApiTokens,
+    revokeApiToken,
   );
   const authController = new AuthController(login);
   const tagController = new TagController(listTags, createTag);
@@ -303,6 +360,70 @@ export function buildHttpApp() {
   const configController = new ConfigController(upsertConfig, getConfig);
   const repositoryController = new RepositoryController(scanRepository);
 
+  const createProject = withLogging(
+    new CreateProject(projectRepository, projectFileStorage, userRepository),
+    "CreateProject",
+    logger,
+  );
+  const getProjectById = withLogging(
+    new GetProjectById(projectRepository, userRepository),
+    "GetProjectById",
+    logger,
+  );
+  const listProjects = withLogging(
+    new ListProjects(projectRepository, userRepository),
+    "ListProjects",
+    logger,
+  );
+  const getProjectFile = withLogging(
+    new GetProjectFile(projectRepository, projectFileStorage),
+    "GetProjectFile",
+    logger,
+  );
+  const listProjectGroups = withLogging(
+    new ListProjectGroups(projectRepository),
+    "ListProjectGroups",
+    logger,
+  );
+
+  // Sync use cases
+  const getAllProjectFiles = withLogging(
+    new GetAllProjectFiles(projectRepository, projectFileStorage),
+    "GetAllProjectFiles",
+    logger,
+  );
+  const syncProjectFiles = withLogging(
+    new SyncProjectFiles(projectRepository, projectFileStorage),
+    "SyncProjectFiles",
+    logger,
+  );
+
+  const updateProject = withLogging(
+    new UpdateProject(projectRepository, projectFileStorage, userRepository),
+    "UpdateProject",
+    logger,
+  );
+  const deleteProject = withLogging(
+    new DeleteProject(projectRepository, projectFileStorage),
+    "DeleteProject",
+    logger,
+  );
+
+  const projectController = new ProjectController(
+    createProject,
+    getProjectById,
+    listProjects,
+    getProjectFile,
+    listProjectGroups,
+    getAllProjectFiles,
+    syncProjectFiles,
+    updateProject,
+    deleteProject,
+  );
+
+  // Inject API token repo into auth middleware for dual JWT + API token support
+  setAuthRepositories(apiTokenRepository, userRepository);
+
   return createApp(
     resourceController,
     userController,
@@ -314,6 +435,7 @@ export function buildHttpApp() {
     projectSetupController,
     generateKitController,
     twoFactorController,
+    projectController,
     logger,
   );
 }

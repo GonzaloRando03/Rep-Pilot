@@ -15,6 +15,7 @@ export class Resource {
     public readonly tags: ReadonlyArray<string>,
     public readonly createdAt: Date,
     public readonly createdBy: string,
+    public readonly hasFiles: boolean,
   ) {}
 
   static create(params: {
@@ -22,12 +23,13 @@ export class Resource {
     name: string;
     type: ResourceType;
     description: string;
-    gitUrl: string;
+    gitUrl?: string;
     path?: string;
     stars?: Star[];
     tags?: string[];
     createdAt?: Date;
     createdBy: string;
+    hasFiles?: boolean;
   }): Resource {
     const normalizedName = params.name?.trim();
     if (!normalizedName) {
@@ -42,8 +44,12 @@ export class Resource {
       throw new DomainValidationError("Resource description is required");
     }
 
-    if (!params.gitUrl || params.gitUrl.trim().length === 0) {
-      throw new DomainValidationError("Resource gitUrl is required");
+    const hasFiles = params.hasFiles ?? false;
+
+    if (!hasFiles && (!params.gitUrl || params.gitUrl.trim().length === 0)) {
+      throw new DomainValidationError(
+        "Resource gitUrl is required when hasFiles is false",
+      );
     }
 
     if (!params.createdBy || params.createdBy.trim().length === 0) {
@@ -55,12 +61,13 @@ export class Resource {
       normalizedName,
       params.type,
       params.description.trim(),
-      params.gitUrl.trim(),
+      params.gitUrl?.trim() ?? "",
       params.path?.trim() ?? "",
       params.stars ?? [],
       params.tags ?? [],
       params.createdAt ?? new Date(),
       params.createdBy.trim(),
+      hasFiles,
     );
   }
 
@@ -81,6 +88,7 @@ export class Resource {
       [...this.tags],
       this.createdAt,
       this.createdBy,
+      this.hasFiles,
     );
   }
 
@@ -101,6 +109,7 @@ export class Resource {
       [...this.tags],
       this.createdAt,
       this.createdBy,
+      this.hasFiles,
     );
   }
 
@@ -125,6 +134,7 @@ export class Resource {
       [...this.tags, tagId],
       this.createdAt,
       this.createdBy,
+      this.hasFiles,
     );
   }
 
@@ -145,6 +155,7 @@ export class Resource {
       this.tags.filter((t) => t !== tagId),
       this.createdAt,
       this.createdBy,
+      this.hasFiles,
     );
   }
 
@@ -181,6 +192,7 @@ export class Resource {
       params.tags ?? [...this.tags],
       this.createdAt,
       this.createdBy,
+      this.hasFiles,
     );
   }
 }

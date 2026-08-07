@@ -1,6 +1,7 @@
 import {
   User,
   AtSign,
+  Mail,
   Shield,
   Languages,
   AlertTriangle,
@@ -18,6 +19,7 @@ import { LANGUAGE_LABELS } from "../../shared/lib/language/Language";
 import { ResourceCard } from "../../shared/ui/ResourceCard/ResourceCard";
 import { TwoFactorSetupModal } from "./components/TwoFactorSetupModal";
 import { TwoFactorDisableModal } from "./components/TwoFactorDisableModal";
+import { ApiTokensSection } from "./components/ApiTokensSection";
 import "./ProfilePage.css";
 
 export function ProfilePage() {
@@ -70,6 +72,14 @@ export function ProfilePage() {
 
           <div className="profile-card__field">
             <dt>
+              <Mail size={14} aria-hidden="true" />
+              {t.email}
+            </dt>
+            <dd>{user.email}</dd>
+          </div>
+
+          <div className="profile-card__field">
+            <dt>
               <Shield size={14} aria-hidden="true" />
               {t.role}
             </dt>
@@ -94,14 +104,20 @@ export function ProfilePage() {
 
         <div className="profile-security__row">
           <div className="profile-security__info">
-            <span className="profile-security__label">{t.security.twoFactorLabel}</span>
-            <span className={`profile-security__status${twoFactorEnabled ? " profile-security__status--on" : ""}`}>
+            <span className="profile-security__label">
+              {t.security.twoFactorLabel}
+            </span>
+            <span
+              className={`profile-security__status${twoFactorEnabled ? " profile-security__status--on" : ""}`}
+            >
               {twoFactorEnabled ? (
                 <CheckCircle size={12} aria-hidden="true" />
               ) : (
                 <XCircle size={12} aria-hidden="true" />
               )}
-              {twoFactorEnabled ? t.security.twoFactorEnabled : t.security.twoFactorDisabled}
+              {twoFactorEnabled
+                ? t.security.twoFactorEnabled
+                : t.security.twoFactorDisabled}
             </span>
           </div>
 
@@ -117,7 +133,9 @@ export function ProfilePage() {
             <button
               type="button"
               className="profile-security__btn profile-security__btn--primary"
-              onClick={() => { void openSetup(); }}
+              onClick={() => {
+                void openSetup();
+              }}
               disabled={setupIsLoading}
               aria-busy={setupIsLoading}
             >
@@ -126,6 +144,8 @@ export function ProfilePage() {
           )}
         </div>
       </section>
+
+      <ApiTokensSection />
 
       <section className="profile-starred">
         <h3 className="profile-starred__title">

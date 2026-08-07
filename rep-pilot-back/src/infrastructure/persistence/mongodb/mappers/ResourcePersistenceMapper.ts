@@ -17,6 +17,7 @@ export function toResourceDocument(
     tags: [...resource.tags],
     createdAt: resource.createdAt,
     createdBy: resource.createdBy,
+    hasFiles: resource.hasFiles,
   };
 }
 
@@ -32,5 +33,6 @@ export function toDomainResource(doc: ResourceDocument): Resource {
     tags: doc.tags,
     createdAt: doc.createdAt,
     createdBy: doc.createdBy,
+    hasFiles: doc.hasFiles ?? false,
   });
 }

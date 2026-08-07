@@ -1,11 +1,15 @@
 import { Router } from "express";
+import multer from "multer";
 import { ResourceController } from "../controllers/ResourceController";
 import { authenticate } from "../middlewares/authenticate";
 import {
   validateCreateResource,
+  validateCreateResourceFromUpload,
   validateSearchResources,
   validateUpdateResource,
 } from "../validators/resourceValidators";
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 export function buildResourceRoutes(controller: ResourceController): Router {
   const router = Router();
@@ -20,6 +24,12 @@ export function buildResourceRoutes(controller: ResourceController): Router {
   router.get("/:id", controller.getById);
   router.get("/:id/download", controller.download);
   router.post("/", validateCreateResource, controller.create);
+  router.post(
+    "/upload",
+    upload.any(),
+    validateCreateResourceFromUpload,
+    controller.createFromUpload,
+  );
   router.patch("/:id/star", controller.toggleStar);
   router.patch("/:id", validateUpdateResource, controller.update);
   router.delete("/:id", controller.delete);

@@ -5,6 +5,7 @@ export interface UserDTO {
   id: string;
   username: string;
   name: string;
+  email: string;
   isAdmin: boolean;
   language: Language;
 }
@@ -12,6 +13,7 @@ export interface UserDTO {
 export interface CreateUserPayload {
   username: string;
   name: string;
+  email: string;
   password: string;
   isAdmin?: boolean;
   language?: Language;
@@ -20,6 +22,7 @@ export interface CreateUserPayload {
 export interface UpdateUserPayload {
   username?: string;
   name?: string;
+  email?: string;
   password?: string;
   isAdmin?: boolean;
   language?: Language;

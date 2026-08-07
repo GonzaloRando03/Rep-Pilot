@@ -307,17 +307,19 @@ export function ResourceDetailPage() {
                     </dd>
                   </div>
                 )}
-                {displayResource.gitUrl && (
+                {(displayResource.gitUrl || displayResource.hasFiles) && (
                   <div className="resource-detail__meta-item resource-detail__meta-item--link">
-                    <a
-                      href={displayResource.gitUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="resource-detail__repo-link"
-                    >
-                      <ExternalLink size={14} aria-hidden="true" />
-                      {t.openRepo}
-                    </a>
+                    {displayResource.gitUrl && (
+                      <a
+                        href={displayResource.gitUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="resource-detail__repo-link"
+                      >
+                        <ExternalLink size={14} aria-hidden="true" />
+                        {t.openRepo}
+                      </a>
+                    )}
                     <button
                       type="button"
                       className="resource-detail__download-btn"

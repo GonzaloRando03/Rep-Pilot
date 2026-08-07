@@ -2,6 +2,6 @@ import { ResourceDTO } from "./ResourceDTO";
 
 export interface ResourceDetailDTO extends ResourceDTO {
   docMD: string | null;
-  owner: string;
-  provider: "github" | "gitlab";
+  owner: string | null;
+  provider: "github" | "gitlab" | null;
 }

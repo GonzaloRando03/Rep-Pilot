@@ -16,6 +16,7 @@ interface UsersSectionTranslations {
   table: {
     name: string;
     username: string;
+    email: string;
     language: string;
     role: string;
     actions: string;
@@ -32,6 +33,7 @@ interface UsersSectionTranslations {
     fields: {
       name: string;
       username: string;
+      email: string;
       password: string;
       isAdmin: string;
       language: string;
@@ -39,6 +41,7 @@ interface UsersSectionTranslations {
     placeholders: {
       name: string;
       username: string;
+      email: string;
       password: string;
       passwordEdit: string;
     };
@@ -110,6 +113,7 @@ export function UsersSection({ hook, t }: UsersSectionProps) {
               <tr>
                 <th className="users-table__th">{t.table.name}</th>
                 <th className="users-table__th">{t.table.username}</th>
+                <th className="users-table__th">{t.table.email}</th>
                 <th className="users-table__th">{t.table.role}</th>
                 <th className="users-table__th users-table__th--actions">
                   {t.table.actions}
@@ -122,6 +126,9 @@ export function UsersSection({ hook, t }: UsersSectionProps) {
                   <td className="users-table__td">{user.name}</td>
                   <td className="users-table__td users-table__td--mono">
                     {user.username}
+                  </td>
+                  <td className="users-table__td users-table__td--mono">
+                    {user.email}
                   </td>
                   <td className="users-table__td">
                     <span

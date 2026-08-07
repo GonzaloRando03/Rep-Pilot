@@ -9,5 +9,6 @@ export function toUserDTO(user: User): UserDTO {
     isAdmin: user.isAdmin,
     language: user.language,
     twoFactorEnabled: user.twoFactorEnabled,
+    email: user.email,
   };
 }

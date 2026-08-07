@@ -6,15 +6,18 @@ import {
   User,
   Download,
   CheckCircle2,
+  FolderGit2,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useNavigate } from "react-router-dom";
 import {
   postProjectSetup,
   postGenerateKit,
 } from "../../shared/lib/ia-kit/projectSetupApi";
 import type { ProjectSetupResponse } from "../../shared/lib/ia-kit/projectSetupApi";
 import { useTranslation } from "../../shared/hooks/useTranslation";
+import { CreateProjectFromKitModal } from "./components/CreateProjectFromKitModal";
 import "./IaKitPage.css";
 
 type ChatPhase = "idle" | "questions" | "generating" | "done";
@@ -27,6 +30,7 @@ interface ChatMessage {
 export function IaKitPage() {
   const t = useTranslation();
   const tc = t.iaKit;
+  const navigate = useNavigate();
 
   const [specs, setSpecs] = useState("");
   const [userSpecs, setUserSpecs] = useState("");
@@ -39,6 +43,8 @@ export function IaKitPage() {
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [kitBlobUrl, setKitBlobUrl] = useState<string | null>(null);
+  const [kitBlob, setKitBlob] = useState<Blob | null>(null);
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   function scrollToBottom() {
@@ -125,6 +131,7 @@ export function IaKitPage() {
       if (kitBlobUrl) URL.revokeObjectURL(kitBlobUrl);
       const url = URL.createObjectURL(blob);
       setKitBlobUrl(url);
+      setKitBlob(blob);
       setPhase("done");
       scrollToBottom();
     } catch (err) {
@@ -248,14 +255,24 @@ export function IaKitPage() {
             </div>
             <div className="chat-message__content">
               <p>{tc.kitCreated}</p>
-              <button
-                type="button"
-                className="download-button"
-                onClick={handleDownload}
-              >
-                <Download size={18} />
-                <span>{tc.downloadKit}</span>
-              </button>
+              <div className="kit-actions">
+                <button
+                  type="button"
+                  className="download-button"
+                  onClick={handleDownload}
+                >
+                  <Download size={18} />
+                  <span>{tc.downloadKit}</span>
+                </button>
+                <button
+                  type="button"
+                  className="create-project-button"
+                  onClick={() => setShowCreateProjectModal(true)}
+                >
+                  <FolderGit2 size={18} />
+                  <span>{tc.createProjectButton}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -271,6 +288,18 @@ export function IaKitPage() {
 
         <div ref={chatEndRef} />
       </div>
+
+      {/* Create project modal */}
+      {showCreateProjectModal && kitBlob && (
+        <CreateProjectFromKitModal
+          kitBlob={kitBlob}
+          onClose={() => setShowCreateProjectModal(false)}
+          onProjectCreated={(projectId) => {
+            setShowCreateProjectModal(false);
+            navigate(`/projects/${projectId}`);
+          }}
+        />
+      )}
 
       {/* Fixed input area at bottom */}
       <div className="ia-kit-input-area">

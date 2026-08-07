@@ -12,6 +12,7 @@ export class User {
     public readonly language: Language,
     public readonly twoFactorSecret: string | null,
     public readonly twoFactorEnabled: boolean,
+    public readonly email: string | undefined,
   ) {}
 
   static create(params: {
@@ -23,6 +24,7 @@ export class User {
     language?: Language;
     twoFactorSecret?: string | null;
     twoFactorEnabled?: boolean;
+    email?: string;
   }): User {
     const normalizedUsername = params.username?.trim();
     if (!normalizedUsername) {
@@ -38,6 +40,8 @@ export class User {
       throw new DomainValidationError("User password is required");
     }
 
+    const normalizedEmail = params.email?.trim() || undefined;
+
     return new User(
       params.id ?? UserId.create(),
       normalizedUsername,
@@ -47,6 +51,7 @@ export class User {
       params.language ?? Language.EN,
       params.twoFactorSecret ?? null,
       params.twoFactorEnabled ?? false,
+      normalizedEmail,
     );
   }
 
@@ -55,15 +60,29 @@ export class User {
       throw new DomainValidationError("Two-factor secret is required");
     }
     return new User(
-      this.id, this.username, this.name, this.isAdmin,
-      this.password, this.language, secret, true,
+      this.id,
+      this.username,
+      this.name,
+      this.isAdmin,
+      this.password,
+      this.language,
+      secret,
+      true,
+      this.email,
     );
   }
 
   disableTwoFactor(): User {
     return new User(
-      this.id, this.username, this.name, this.isAdmin,
-      this.password, this.language, null, false,
+      this.id,
+      this.username,
+      this.name,
+      this.isAdmin,
+      this.password,
+      this.language,
+      null,
+      false,
+      this.email,
     );
   }
 
@@ -72,15 +91,29 @@ export class User {
       throw new DomainValidationError("Two-factor secret is required");
     }
     return new User(
-      this.id, this.username, this.name, this.isAdmin,
-      this.password, this.language, secret, false,
+      this.id,
+      this.username,
+      this.name,
+      this.isAdmin,
+      this.password,
+      this.language,
+      secret,
+      false,
+      this.email,
     );
   }
 
   withLanguage(newLanguage: Language): User {
     return new User(
-      this.id, this.username, this.name, this.isAdmin,
-      this.password, newLanguage, this.twoFactorSecret, this.twoFactorEnabled,
+      this.id,
+      this.username,
+      this.name,
+      this.isAdmin,
+      this.password,
+      newLanguage,
+      this.twoFactorSecret,
+      this.twoFactorEnabled,
+      this.email,
     );
   }
 
@@ -89,8 +122,15 @@ export class User {
       throw new DomainValidationError("User password is required");
     }
     return new User(
-      this.id, this.username, this.name, this.isAdmin,
-      newPassword, this.language, this.twoFactorSecret, this.twoFactorEnabled,
+      this.id,
+      this.username,
+      this.name,
+      this.isAdmin,
+      newPassword,
+      this.language,
+      this.twoFactorSecret,
+      this.twoFactorEnabled,
+      this.email,
     );
   }
 
@@ -100,6 +140,7 @@ export class User {
     isAdmin?: boolean;
     language?: Language;
     password?: string;
+    email?: string;
   }): User {
     const name = params.name !== undefined ? params.name.trim() : this.name;
     if (!name) throw new DomainValidationError("User name is required");
@@ -117,20 +158,49 @@ export class User {
       params.language ?? this.language,
       this.twoFactorSecret,
       this.twoFactorEnabled,
+      params.email !== undefined ? params.email : this.email,
     );
   }
 
   promoteToAdmin(): User {
     return new User(
-      this.id, this.username, this.name, true,
-      this.password, this.language, this.twoFactorSecret, this.twoFactorEnabled,
+      this.id,
+      this.username,
+      this.name,
+      true,
+      this.password,
+      this.language,
+      this.twoFactorSecret,
+      this.twoFactorEnabled,
+      this.email,
     );
   }
 
   demoteFromAdmin(): User {
     return new User(
-      this.id, this.username, this.name, false,
-      this.password, this.language, this.twoFactorSecret, this.twoFactorEnabled,
+      this.id,
+      this.username,
+      this.name,
+      false,
+      this.password,
+      this.language,
+      this.twoFactorSecret,
+      this.twoFactorEnabled,
+      this.email,
+    );
+  }
+
+  withEmail(newEmail: string | undefined): User {
+    return new User(
+      this.id,
+      this.username,
+      this.name,
+      this.isAdmin,
+      this.password,
+      this.language,
+      this.twoFactorSecret,
+      this.twoFactorEnabled,
+      newEmail,
     );
   }
 }

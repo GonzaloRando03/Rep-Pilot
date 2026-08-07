@@ -11,10 +11,25 @@ export interface CreateResourceDTO {
   name: string;
   type: ResourceType;
   description: string;
-  gitUrl: string;
+  gitUrl?: string;
   path?: string;
   tags?: string[];
   createdBy: string;
+}
+
+export interface ResourceFileEntry {
+  path: string;
+  content: string;
+}
+
+export interface CreateResourceFromUploadDTO {
+  name: string;
+  type: ResourceType;
+  description: string;
+  path?: string;
+  tags?: string[];
+  createdBy: string;
+  files: ResourceFileEntry[];
 }
 
 export interface ResourceDTO {
@@ -28,4 +43,5 @@ export interface ResourceDTO {
   tags: TagDTO[];
   createdAt: string;
   createdBy: CreatorDTO;
+  hasFiles: boolean;
 }

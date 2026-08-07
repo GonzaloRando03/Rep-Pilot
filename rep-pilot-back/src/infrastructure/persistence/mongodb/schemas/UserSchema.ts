@@ -9,6 +9,7 @@ export interface UserDocument extends Document<string> {
   language: string;
   twoFactorSecret: string | null;
   twoFactorEnabled: boolean;
+  email?: string;
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -21,6 +22,7 @@ const userSchema = new Schema<UserDocument>(
     language: { type: String, required: true, default: "en" },
     twoFactorSecret: { type: String, default: null },
     twoFactorEnabled: { type: Boolean, required: true, default: false },
+    email: { type: String, required: false },
   },
   { _id: false },
 );

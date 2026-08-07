@@ -19,6 +19,7 @@ export async function toUserDocument(
       ? await tokenEncryptor.encrypt(user.twoFactorSecret)
       : null,
     twoFactorEnabled: user.twoFactorEnabled,
+    email: user.email,
   };
 }
 
@@ -26,10 +27,9 @@ export async function toDomainUser(
   doc: UserDocument,
   tokenEncryptor: TokenEncryptor,
 ): Promise<User> {
-  const twoFactorSecret =
-    doc.twoFactorSecret
-      ? await tokenEncryptor.decrypt(doc.twoFactorSecret)
-      : null;
+  const twoFactorSecret = doc.twoFactorSecret
+    ? await tokenEncryptor.decrypt(doc.twoFactorSecret)
+    : null;
 
   return User.create({
     id: UserId.create(doc._id),
@@ -40,5 +40,6 @@ export async function toDomainUser(
     language: (doc.language as Language) ?? Language.EN,
     twoFactorSecret,
     twoFactorEnabled: doc.twoFactorEnabled ?? false,
+    email: doc.email,
   });
 }

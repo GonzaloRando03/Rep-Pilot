@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   BookOpen,
   FileText,
+  Folders,
   LayoutDashboard,
   ShieldCheck,
   Sparkles,
@@ -26,6 +27,8 @@ import { LoginPage } from "./pages/login/LoginPage";
 import { ForcedTwoFactorSetupPage } from "./pages/login/ForcedTwoFactorSetupPage";
 import { AdminPage } from "./pages/admin/AdminPage";
 import { IaKitPage } from "./pages/ia-kit/IaKitPage";
+import { ProjectsPage } from "./pages/projects/ProjectsPage";
+import { ProjectDetailPage } from "./pages/projects/ProjectDetailPage";
 import { useAuth } from "./shared/hooks/useAuth";
 import { useTranslation } from "./shared/hooks/useTranslation";
 import "./App.css";
@@ -64,6 +67,12 @@ function App() {
       },
       { key: "ia-kit", path: "/ia-kit", label: t.nav.iaKit, icon: Sparkles },
       {
+        key: "projects",
+        path: "/projects",
+        label: t.nav.projects,
+        icon: Folders,
+      },
+      {
         key: "documentation",
         path: "/documentation",
         label: t.nav.documentation,
@@ -84,9 +93,10 @@ function App() {
 
   const title = useMemo(() => {
     if (pathname.startsWith("/resources/")) return t.resourceDetail.pageTitle;
+    if (pathname.startsWith("/projects/")) return t.nav.projectsDetail;
     if (pathname === "/profile") return t.profile.pageTitle;
     return NAV_ITEMS.find((item) => item.path === pathname)?.label ?? pathname;
-  }, [pathname, t]);
+  }, [pathname, t, NAV_ITEMS]);
 
   function handleSearch(query: string) {
     if (!query) return;
@@ -139,6 +149,8 @@ function App() {
           <Route path="/resources/:id" element={<ResourceDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/ia-kit" element={<IaKitPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/projects/:id" element={<ProjectDetailPage />} />
           <Route
             path="/documentation"
             element={

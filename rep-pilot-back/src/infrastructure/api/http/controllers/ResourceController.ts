@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { CreateResourceUseCase } from "../../../../application/ports/in/CreateResourceUseCase";
+import { CreateResourceFromUploadUseCase } from "../../../../application/ports/in/CreateResourceFromUploadUseCase";
 import { DownloadResourceUseCase } from "../../../../application/ports/in/DownloadResourceUseCase";
 import { GetMyStarredResourcesUseCase } from "../../../../application/ports/in/GetMyStarredResourcesUseCase";
 import { GetResourceByIdUseCase } from "../../../../application/ports/in/GetResourceByIdUseCase";
@@ -16,6 +17,7 @@ import { AuthenticatedRequest } from "../types/express.d";
 export class ResourceController {
   constructor(
     private readonly createResourceUseCase: CreateResourceUseCase,
+    private readonly createResourceFromUploadUseCase: CreateResourceFromUploadUseCase,
     private readonly listResourcesUseCase: ListResourcesUseCase,
     private readonly getResourceSummaryUseCase: GetResourceSummaryUseCase,
     private readonly getResourceHighlightsUseCase: GetResourceHighlightsUseCase,
@@ -179,6 +181,39 @@ export class ResourceController {
         },
       );
       res.status(200).json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  createFromUpload = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { sub: createdBy } = (req as AuthenticatedRequest).user;
+
+      // Parse metadata from the "metadata" field (JSON string in multipart)
+      const metadata = JSON.parse(req.body.metadata ?? "{}");
+
+      // Extract files from multer
+      const uploadedFiles = (req.files as Express.Multer.File[]) ?? [];
+      const files = uploadedFiles.map((f) => ({
+        path: f.originalname,
+        content: f.buffer.toString("utf-8"),
+      }));
+
+      const resource = await this.createResourceFromUploadUseCase.execute({
+        name: metadata.name,
+        type: metadata.type,
+        description: metadata.description,
+        path: metadata.path,
+        tags: metadata.tags,
+        createdBy,
+        files,
+      });
+      res.status(201).json(resource);
     } catch (error) {
       next(error);
     }
