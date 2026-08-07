@@ -311,12 +311,33 @@ export const es: Translations = {
     starredError: "No se pudieron cargar los recursos favoritos.",
     security: {
       title: "Seguridad",
+      passwordLabel: "Contraseña",
+      passwordDescription: "Actualiza tu contraseña de acceso.",
+      changePasswordButton: "Cambiar contraseña",
       twoFactorLabel: "Autenticación de doble factor (2FA)",
       twoFactorEnabled: "Activado",
       twoFactorDisabled: "Desactivado",
       enableButton: "Activar 2FA",
       disableButton: "Desactivar 2FA",
       enabling: "Iniciando…",
+      passwordModal: {
+        title: "Cambiar contraseña",
+        description:
+          "Introduce tu contraseña actual y elige una nueva de al menos 8 caracteres.",
+        closeAriaLabel: "Cerrar cambio de contraseña",
+        currentPasswordLabel: "Contraseña actual",
+        newPasswordLabel: "Nueva contraseña",
+        currentPasswordRequired: "La contraseña actual es obligatoria.",
+        newPasswordRequired: "La nueva contraseña es obligatoria.",
+        newPasswordTooShort:
+          "La nueva contraseña debe tener al menos 8 caracteres.",
+        submitButton: "Actualizar contraseña",
+        submitting: "Actualizando…",
+        cancelButton: "Cancelar",
+        invalidCurrentPassword: "La contraseña actual no es correcta.",
+        submitError: "No se pudo cambiar la contraseña. Inténtalo de nuevo.",
+        successMessage: "Contraseña actualizada correctamente.",
+      },
       setupModal: {
         title: "Activar 2FA",
         step: (current, total) => `Paso ${current} de ${total}`,

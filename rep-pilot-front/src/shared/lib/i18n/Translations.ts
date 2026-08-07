@@ -284,12 +284,31 @@ export interface Translations {
     starredError: string;
     security: {
       title: string;
+      passwordLabel: string;
+      passwordDescription: string;
+      changePasswordButton: string;
       twoFactorLabel: string;
       twoFactorEnabled: string;
       twoFactorDisabled: string;
       enableButton: string;
       disableButton: string;
       enabling: string;
+      passwordModal: {
+        title: string;
+        description: string;
+        closeAriaLabel: string;
+        currentPasswordLabel: string;
+        newPasswordLabel: string;
+        currentPasswordRequired: string;
+        newPasswordRequired: string;
+        newPasswordTooShort: string;
+        submitButton: string;
+        submitting: string;
+        cancelButton: string;
+        invalidCurrentPassword: string;
+        submitError: string;
+        successMessage: string;
+      };
       setupModal: {
         title: string;
         step: (current: number, total: number) => string;

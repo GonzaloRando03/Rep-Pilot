@@ -7,6 +7,7 @@ import { UpdateUserUseCase } from "../../../../application/ports/in/UpdateUserUs
 import { CreateApiTokenUseCase } from "../../../../application/ports/in/CreateApiTokenUseCase";
 import { ListApiTokensUseCase } from "../../../../application/ports/in/ListApiTokensUseCase";
 import { RevokeApiTokenUseCase } from "../../../../application/ports/in/RevokeApiTokenUseCase";
+import { ChangePasswordUseCase } from "../../../../application/ports/in/ChangePasswordUseCase";
 import { AuthenticatedRequest } from "../types/express.d";
 
 export class UserController {
@@ -19,6 +20,7 @@ export class UserController {
     private readonly createApiTokenUseCase: CreateApiTokenUseCase,
     private readonly listApiTokensUseCase: ListApiTokensUseCase,
     private readonly revokeApiTokenUseCase: RevokeApiTokenUseCase,
+    private readonly changePasswordUseCase: ChangePasswordUseCase,
   ) {}
 
   create = async (
@@ -164,6 +166,23 @@ export class UserController {
         tokenId: tokenId.trim(),
       });
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  changePassword = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { sub } = (req as AuthenticatedRequest).user;
+      const user = await this.changePasswordUseCase.execute(sub, {
+        currentPassword: req.body.currentPassword,
+        newPassword: req.body.newPassword,
+      });
+      res.status(200).json(user);
     } catch (error) {
       next(error);
     }

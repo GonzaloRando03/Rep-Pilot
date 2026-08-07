@@ -130,6 +130,12 @@
   gap: var(--space-4);
 }
 
+.profile-security__row + .profile-security__row {
+  border-top: var(--border-1);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+}
+
 .profile-security__info {
   display: flex;
   flex-direction: column;

@@ -15,10 +15,12 @@ import { userStorage } from "../../shared/lib/auth/userStorage";
 import { useTranslation } from "../../shared/hooks/useTranslation";
 import { useStarredResources } from "../../shared/hooks/useStarredResources";
 import { useTwoFactor } from "../../shared/hooks/useTwoFactor";
+import { usePasswordChange } from "../../shared/hooks/usePasswordChange";
 import { LANGUAGE_LABELS } from "../../shared/lib/language/Language";
 import { ResourceCard } from "../../shared/ui/ResourceCard/ResourceCard";
 import { TwoFactorSetupModal } from "./components/TwoFactorSetupModal";
 import { TwoFactorDisableModal } from "./components/TwoFactorDisableModal";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 import { ApiTokensSection } from "./components/ApiTokensSection";
 import "./ProfilePage.css";
 
@@ -44,6 +46,14 @@ export function ProfilePage() {
     closeDisable,
     confirmDisable,
   } = useTwoFactor();
+  const {
+    isOpen: passwordChangeOpen,
+    isChanging: isChangingPassword,
+    error: passwordChangeError,
+    open: openPasswordChange,
+    close: closePasswordChange,
+    submit: submitPasswordChange,
+  } = usePasswordChange();
 
   if (!user) return null;
 
@@ -101,6 +111,24 @@ export function ProfilePage() {
           <Lock size={16} aria-hidden="true" />
           {t.security.title}
         </h3>
+
+        <div className="profile-security__row">
+          <div className="profile-security__info">
+            <span className="profile-security__label">
+              {t.security.passwordLabel}
+            </span>
+            <span className="profile-security__status">
+              {t.security.passwordDescription}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="profile-security__btn profile-security__btn--primary"
+            onClick={openPasswordChange}
+          >
+            {t.security.changePasswordButton}
+          </button>
+        </div>
 
         <div className="profile-security__row">
           <div className="profile-security__info">
@@ -209,6 +237,15 @@ export function ProfilePage() {
           disableError={disableError}
           onClose={closeDisable}
           onConfirm={confirmDisable}
+        />
+      )}
+
+      {passwordChangeOpen && (
+        <ChangePasswordModal
+          isChanging={isChangingPassword}
+          submitError={passwordChangeError}
+          onClose={closePasswordChange}
+          onSubmit={submitPasswordChange}
         />
       )}
     </div>

@@ -5,6 +5,7 @@ import { requireAdmin } from "../middlewares/requireAdmin";
 import { validateCreateUser } from "../validators/userValidators";
 import { validateUpdateLanguage } from "../validators/userLanguageValidators";
 import { validateUpdateUser } from "../validators/updateUserValidators";
+import { validateChangePassword } from "../validators/changePasswordValidators";
 
 export function buildUserRoutes(controller: UserController): Router {
   const router = Router();
@@ -17,6 +18,11 @@ export function buildUserRoutes(controller: UserController): Router {
     "/me/language",
     validateUpdateLanguage,
     controller.updateLanguage,
+  );
+  router.patch(
+    "/me/password",
+    validateChangePassword,
+    controller.changePassword,
   );
 
   // API Tokens
