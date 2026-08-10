@@ -283,7 +283,7 @@ export function buildHttpApp() {
     logger,
   );
   const confirmTwoFactor = withLogging(
-    new ConfirmTwoFactor(userRepository, totp),
+    new ConfirmTwoFactor(userRepository, totp, tokenService),
     "ConfirmTwoFactor",
     logger,
   );

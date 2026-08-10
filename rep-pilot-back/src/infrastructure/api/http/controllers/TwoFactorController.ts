@@ -32,8 +32,11 @@ export class TwoFactorController {
   ): Promise<void> => {
     try {
       const userId = (req as AuthenticatedRequest).user.sub;
-      await this.confirmTwoFactor.execute({ userId, totpCode: req.body.totpCode });
-      res.status(204).send();
+      const result = await this.confirmTwoFactor.execute({
+        userId,
+        totpCode: req.body.totpCode,
+      });
+      res.status(200).json(result);
     } catch (error) {
       next(error);
     }
@@ -46,7 +49,10 @@ export class TwoFactorController {
   ): Promise<void> => {
     try {
       const userId = (req as AuthenticatedRequest).user.sub;
-      await this.disableTwoFactor.execute({ userId, totpCode: req.body.totpCode });
+      await this.disableTwoFactor.execute({
+        userId,
+        totpCode: req.body.totpCode,
+      });
       res.status(204).send();
     } catch (error) {
       next(error);
