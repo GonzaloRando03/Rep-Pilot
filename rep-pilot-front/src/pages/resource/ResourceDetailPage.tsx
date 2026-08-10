@@ -19,7 +19,7 @@ import { useTranslation } from "../../shared/hooks/useTranslation";
 import { TagChip } from "../../shared/ui/TagChip/TagChip";
 import { tokenStorage } from "../../shared/lib/auth/tokenStorage";
 import { userStorage } from "../../shared/lib/auth/userStorage";
-import { BASE_URL } from "../../shared/lib/apiClient";
+import { BASE_URL, isSessionExpiredError } from "../../shared/lib/apiClient";
 import { toast } from "../../shared/lib/toast/toastBus";
 import {
   deleteResource,
@@ -67,8 +67,10 @@ export function ResourceDetailPage() {
       a.download = `${resource.name}.zip`;
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
-      toast.error(t.errorServer);
+    } catch (err) {
+      if (!isSessionExpiredError(err)) {
+        toast.error(t.errorServer);
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -106,8 +108,10 @@ export function ResourceDetailPage() {
       await deleteResource(resource.id);
       toast.success(t.deleteSuccess);
       navigate("/catalog");
-    } catch {
-      toast.error(t.errorServer);
+    } catch (err) {
+      if (!isSessionExpiredError(err)) {
+        toast.error(t.errorServer);
+      }
     } finally {
       setIsDeleting(false);
     }
@@ -122,8 +126,10 @@ export function ResourceDetailPage() {
     try {
       const fresh = await getResourceById(id);
       setEditedResource(fresh);
-    } catch {
-      toast.error(t.errorServer);
+    } catch (err) {
+      if (!isSessionExpiredError(err)) {
+        toast.error(t.errorServer);
+      }
     }
   };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchTags, type Tag } from "../lib/resources/tagsApi";
 import { toast } from "../lib/toast/toastBus";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 export interface UseTagsResult {
   tags: Tag[];
@@ -21,8 +22,8 @@ export function useTags(): UseTagsResult {
           setIsLoading(false);
         }
       })
-      .catch(() => {
-        if (!cancelled) {
+      .catch((err) => {
+        if (!cancelled && !isSessionExpiredError(err)) {
           toast.error("No se pudieron cargar las etiquetas.");
           setIsLoading(false);
         }

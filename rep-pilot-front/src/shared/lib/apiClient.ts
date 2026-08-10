@@ -4,9 +4,11 @@ export interface ApiError {
   status: number;
   message: string;
   requiresTwoFactor?: boolean;
+  sessionExpired?: boolean;
 }
 
 let onUnauthorized: (() => void) | null = null;
+let sessionExpired = false;
 
 export function setOnUnauthorized(callback: () => void): void {
   onUnauthorized = callback;
@@ -14,6 +16,14 @@ export function setOnUnauthorized(callback: () => void): void {
 
 export function clearOnUnauthorized(): void {
   onUnauthorized = null;
+}
+
+export function resetSessionExpired(): void {
+  sessionExpired = false;
+}
+
+export function isSessionExpiredError(error: unknown): boolean {
+  return (error as ApiError)?.sessionExpired === true;
 }
 
 export async function apiFetch<T>(
@@ -36,7 +46,9 @@ export async function apiFetch<T>(
     let parsedBody: { message?: string; requiresTwoFactor?: boolean } = {};
     try {
       parsedBody = JSON.parse(bodyText);
-    } catch { /* not JSON */ }
+    } catch {
+      /* not JSON */
+    }
 
     const apiError: ApiError = {
       status: response.status,
@@ -44,12 +56,12 @@ export async function apiFetch<T>(
       requiresTwoFactor: parsedBody.requiresTwoFactor,
     };
 
-    if (
-      response.status === 401 &&
-      onUnauthorized &&
-      !skipUnauthorizedRedirect
-    ) {
-      onUnauthorized();
+    if (response.status === 401 && !skipUnauthorizedRedirect) {
+      if (!sessionExpired && onUnauthorized) {
+        sessionExpired = true;
+        onUnauthorized();
+      }
+      apiError.sessionExpired = true;
     }
 
     throw apiError;

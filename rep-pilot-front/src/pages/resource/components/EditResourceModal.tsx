@@ -6,6 +6,7 @@ import {
 } from "../../../shared/lib/resources/resourcesApi";
 import { createTag, type Tag } from "../../../shared/lib/resources/tagsApi";
 import type { ApiError } from "../../../shared/lib/apiClient";
+import { isSessionExpiredError } from "../../../shared/lib/apiClient";
 import { useTags } from "../../../shared/hooks/useTags";
 import { toast } from "../../../shared/lib/toast/toastBus";
 import "./EditResourceModal.css";
@@ -112,6 +113,7 @@ export function EditResourceModal({
       setNewTag("");
     } catch (err: unknown) {
       const apiErr = err as ApiError;
+      if (isSessionExpiredError(err)) return;
       if (apiErr.status === 409) {
         toast.error(`La etiqueta "${trimmed}" ya existe.`);
       } else {
@@ -152,6 +154,7 @@ export function EditResourceModal({
       onClose();
     } catch (err: unknown) {
       const apiError = err as { status?: number };
+      if (isSessionExpiredError(err)) return;
       if (apiError.status === 403) {
         toast.error(t.forbidden);
       } else {

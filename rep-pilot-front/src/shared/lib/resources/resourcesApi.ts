@@ -132,7 +132,12 @@ export async function uploadResource(
     }),
   );
 
-  payload.files.forEach((file) => formData.append("files", file));
+  payload.files.forEach((file) => {
+    const fileName =
+      (file as File & { webkitRelativePath?: string }).webkitRelativePath ||
+      file.name;
+    formData.append("files", file, fileName);
+  });
 
   const { BASE_URL } = await import("../apiClient");
   const response = await fetch(`${BASE_URL}/api/resources/upload`, {

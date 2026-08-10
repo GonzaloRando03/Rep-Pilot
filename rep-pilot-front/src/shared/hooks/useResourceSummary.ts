@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchResourceSummary } from "../lib/resources/resourcesApi";
 import type { ResourceSummary } from "../lib/resources/resourcesApi";
 import { toast } from "../lib/toast/toastBus";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 interface UseResourceSummaryReturn {
   data: ResourceSummary | null;
@@ -19,8 +20,8 @@ export function useResourceSummary(): UseResourceSummaryReturn {
       .then((summary) => {
         if (!cancelled) setData(summary);
       })
-      .catch(() => {
-        if (!cancelled)
+      .catch((err) => {
+        if (!cancelled && !isSessionExpiredError(err))
           toast.error("No se pudo cargar el resumen de recursos.");
       })
       .finally(() => {

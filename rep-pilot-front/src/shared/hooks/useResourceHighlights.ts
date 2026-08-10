@@ -4,6 +4,7 @@ import {
   type ResourceHighlights,
 } from "../lib/resources/resourcesApi";
 import { toast } from "../lib/toast/toastBus";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 interface UseResourceHighlightsReturn {
   data: ResourceHighlights | null;
@@ -21,8 +22,8 @@ export function useResourceHighlights(): UseResourceHighlightsReturn {
       .then((highlights) => {
         if (!cancelled) setData(highlights);
       })
-      .catch(() => {
-        if (!cancelled)
+      .catch((err) => {
+        if (!cancelled && !isSessionExpiredError(err))
           toast.error("No se pudieron cargar los recursos destacados.");
       })
       .finally(() => {

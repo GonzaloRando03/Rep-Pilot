@@ -7,6 +7,7 @@ import {
 } from "../lib/projects/projectsApi";
 import { toast } from "../lib/toast/toastBus";
 import { useTranslation } from "./useTranslation";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 export interface UseProjectsReturn {
   projects: ProjectResponse[];
@@ -28,9 +29,11 @@ export function useProjects(): UseProjectsReturn {
   useEffect(() => {
     fetchProjects()
       .then(setProjects)
-      .catch(() => {
-        setLoadError(true);
-        toast.error(tp.loadError);
+      .catch((err) => {
+        if (!isSessionExpiredError(err)) {
+          setLoadError(true);
+          toast.error(tp.loadError);
+        }
       })
       .finally(() => setIsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,8 +47,10 @@ export function useProjects(): UseProjectsReturn {
         setProjects((prev) => [project, ...prev]);
         toast.success(tp.createSuccess);
         return project;
-      } catch {
-        toast.error(tp.createError);
+      } catch (err) {
+        if (!isSessionExpiredError(err)) {
+          toast.error(tp.createError);
+        }
         return null;
       } finally {
         setIsCreating(false);

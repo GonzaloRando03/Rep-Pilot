@@ -6,6 +6,7 @@ import {
 } from "../lib/config/ldapApi";
 import { toast } from "../lib/toast/toastBus";
 import { useTranslation } from "./useTranslation";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 interface LdapConfigState {
   config: LdapConfig;
@@ -67,9 +68,11 @@ export function useLdapConfig(): UseLdapConfigReturn {
       const updated = await saveLdapConfig(state.config);
       setState((s) => ({ ...s, config: updated, isSaving: false, errors: {} }));
       toast.success(tl.saveSuccess);
-    } catch {
+    } catch (err) {
       setState((s) => ({ ...s, isSaving: false }));
-      toast.error(tl.saveError);
+      if (!isSessionExpiredError(err)) {
+        toast.error(tl.saveError);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.config, tl.saveSuccess, tl.saveError, tl.required]);

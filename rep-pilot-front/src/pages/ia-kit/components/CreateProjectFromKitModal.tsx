@@ -7,6 +7,7 @@ import { createProject } from "../../../shared/lib/projects/projectsApi";
 import type { ProjectFileEntry } from "../../../shared/lib/projects/projectsApi";
 import { fetchUsers, type UserDTO } from "../../../shared/lib/users/usersApi";
 import { toast } from "../../../shared/lib/toast/toastBus";
+import { isSessionExpiredError } from "../../../shared/lib/apiClient";
 import { useTranslation } from "../../../shared/hooks/useTranslation";
 import "./CreateProjectFromKitModal.css";
 
@@ -256,6 +257,7 @@ export function CreateProjectFromKitModal({
       toast.success(tc.createSuccess);
       onProjectCreated(result.id);
     } catch (err) {
+      if (isSessionExpiredError(err)) return;
       const message =
         err && typeof err === "object" && "message" in err
           ? String((err as { message: string }).message)

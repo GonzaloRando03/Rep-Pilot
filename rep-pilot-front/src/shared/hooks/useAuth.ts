@@ -8,6 +8,7 @@ import { toast } from "../lib/toast/toastBus";
 import {
   setOnUnauthorized,
   clearOnUnauthorized,
+  resetSessionExpired,
   type ApiError,
 } from "../lib/apiClient";
 import type { User } from "../lib/auth/userStorage";
@@ -25,7 +26,11 @@ interface AuthState {
 }
 
 interface UseAuthReturn extends AuthState {
-  login: (username: string, password: string, totpCode?: string) => Promise<void>;
+  login: (
+    username: string,
+    password: string,
+    totpCode?: string,
+  ) => Promise<void>;
   logout: () => void;
   updateLanguage: (language: Language) => Promise<void>;
   clearTwoFactor: () => void;
@@ -49,17 +54,28 @@ export function useAuth(): UseAuthReturn {
       tokenStorage.clear();
       userStorage.clear();
       setLanguage(LanguageEnum.En);
-      setState({ isAuthenticated: false, isLoading: false, user: null, requiresTwoFactor: false, requiresTwoFactorSetup: false });
+      setState({
+        isAuthenticated: false,
+        isLoading: false,
+        user: null,
+        requiresTwoFactor: false,
+        requiresTwoFactorSetup: false,
+      });
       toast.warning(t.auth.toast.sessionExpired);
     });
     return () => clearOnUnauthorized();
   }, [setLanguage, t.auth.toast.sessionExpired]);
 
-  async function login(username: string, password: string, totpCode?: string): Promise<void> {
+  async function login(
+    username: string,
+    password: string,
+    totpCode?: string,
+  ): Promise<void> {
     setState((s) => ({ ...s, isLoading: true }));
     try {
       const { token } = await loginRequest({ username, password, totpCode });
       tokenStorage.set(token);
+      resetSessionExpired();
 
       const user = await fetchCurrentUser();
       userStorage.set(user);
@@ -78,9 +94,21 @@ export function useAuth(): UseAuthReturn {
       }
 
       if (forcedSetupRequired) {
-        setState({ isAuthenticated: false, isLoading: false, user, requiresTwoFactor: false, requiresTwoFactorSetup: true });
+        setState({
+          isAuthenticated: false,
+          isLoading: false,
+          user,
+          requiresTwoFactor: false,
+          requiresTwoFactorSetup: true,
+        });
       } else {
-        setState({ isAuthenticated: true, isLoading: false, user, requiresTwoFactor: false, requiresTwoFactorSetup: false });
+        setState({
+          isAuthenticated: true,
+          isLoading: false,
+          user,
+          requiresTwoFactor: false,
+          requiresTwoFactorSetup: false,
+        });
         toast.success(t.auth.toast.welcome(user.name));
       }
     } catch (err) {
@@ -98,7 +126,13 @@ export function useAuth(): UseAuthReturn {
         toast.error(message);
         tokenStorage.clear();
         userStorage.clear();
-        setState({ isAuthenticated: false, isLoading: false, user: null, requiresTwoFactor: false, requiresTwoFactorSetup: false });
+        setState({
+          isAuthenticated: false,
+          isLoading: false,
+          user: null,
+          requiresTwoFactor: false,
+          requiresTwoFactorSetup: false,
+        });
       }
     }
   }
@@ -109,7 +143,11 @@ export function useAuth(): UseAuthReturn {
 
   function completeForcedSetup(): void {
     const user = userStorage.get();
-    setState((s) => ({ ...s, isAuthenticated: true, requiresTwoFactorSetup: false }));
+    setState((s) => ({
+      ...s,
+      isAuthenticated: true,
+      requiresTwoFactorSetup: false,
+    }));
     if (user) toast.success(t.auth.toast.welcome(user.name));
   }
 
@@ -117,7 +155,13 @@ export function useAuth(): UseAuthReturn {
     tokenStorage.clear();
     userStorage.clear();
     setLanguage(LanguageEnum.En);
-    setState({ isAuthenticated: false, isLoading: false, user: null, requiresTwoFactor: false, requiresTwoFactorSetup: false });
+    setState({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      requiresTwoFactor: false,
+      requiresTwoFactorSetup: false,
+    });
     toast.info(t.auth.toast.loggedOut);
   }
 
@@ -138,5 +182,12 @@ export function useAuth(): UseAuthReturn {
     }
   }
 
-  return { ...state, login, logout, updateLanguage, clearTwoFactor, completeForcedSetup };
+  return {
+    ...state,
+    login,
+    logout,
+    updateLanguage,
+    clearTwoFactor,
+    completeForcedSetup,
+  };
 }

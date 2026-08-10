@@ -9,6 +9,7 @@ import { createTag, type Tag } from "../../../shared/lib/resources/tagsApi";
 import { useTags } from "../../../shared/hooks/useTags";
 import { toast } from "../../../shared/lib/toast/toastBus";
 import type { ApiError } from "../../../shared/lib/apiClient";
+import { isSessionExpiredError } from "../../../shared/lib/apiClient";
 import type { Translations } from "../../../shared/lib/i18n/Translations";
 import { Step0SourceSelect, type SourceType } from "./Step0SourceSelect";
 import { Step2ModeSelect, type AddMode } from "./Step2ModeSelect";
@@ -210,6 +211,7 @@ export function AddResourceModal({
       return created;
     } catch (err) {
       const apiErr = err as ApiError;
+      if (isSessionExpiredError(err)) return null;
       if (apiErr.status === 409) {
         toast.error(`Tag "${name}" already exists.`);
       } else {

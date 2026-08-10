@@ -82,12 +82,20 @@ export function StepUploadForm({
     });
   }
 
-  function handleFilesAdded(newFiles: FileList | null) {
+  /** Returns the display path for a file (relative path if from a directory, else base name) */
+  function getFilePath(file: File): string {
+    return (
+      (file as File & { webkitRelativePath?: string }).webkitRelativePath ||
+      file.name
+    );
+  }
+
+  function handleFilesAdded(newFiles: FileList | File[] | null) {
     if (!newFiles) return;
     const incoming = Array.from(newFiles);
     setFiles((prev) => {
-      const existingNames = new Set(prev.map((f) => f.name));
-      const unique = incoming.filter((f) => !existingNames.has(f.name));
+      const existingPaths = new Set(prev.map(getFilePath));
+      const unique = incoming.filter((f) => !existingPaths.has(getFilePath(f)));
       return [...prev, ...unique];
     });
     if (errors.files) setErrors((prev) => ({ ...prev, files: "" }));
@@ -97,9 +105,85 @@ export function StepUploadForm({
     setFiles((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function handleDrop(e: React.DragEvent) {
+  /** Recursively collect files from a FileSystemEntry (file or directory) */
+  async function collectFilesFromEntry(
+    entry: FileSystemEntry,
+    basePath: string,
+  ): Promise<File[]> {
+    if (entry.isFile) {
+      const fileEntry = entry as FileSystemFileEntry;
+      const file = await new Promise<File>((resolve, reject) => {
+        fileEntry.file(resolve, reject);
+      });
+      const fullPath = basePath ? `${basePath}/${entry.name}` : entry.name;
+      // Patch webkitRelativePath onto the File so it carries the directory context
+      const patched = new File([file], entry.name, {
+        type: file.type,
+        lastModified: file.lastModified,
+      });
+      Object.defineProperty(patched, "webkitRelativePath", {
+        value: fullPath,
+        writable: false,
+        configurable: true,
+      });
+      return [patched];
+    }
+
+    if (entry.isDirectory) {
+      const dirEntry = entry as FileSystemDirectoryEntry;
+      const reader = dirEntry.createReader();
+      const dirPath = basePath ? `${basePath}/${entry.name}` : entry.name;
+
+      const readAllEntries = (): Promise<FileSystemEntry[]> => {
+        return new Promise((resolve) => {
+          const all: FileSystemEntry[] = [];
+          const readBatch = () => {
+            reader.readEntries((entries) => {
+              if (entries.length === 0) {
+                resolve(all);
+              } else {
+                all.push(...entries);
+                readBatch();
+              }
+            });
+          };
+          readBatch();
+        });
+      };
+
+      const entries = await readAllEntries();
+      const results: File[] = [];
+      for (const child of entries) {
+        const childFiles = await collectFilesFromEntry(child, dirPath);
+        results.push(...childFiles);
+      }
+      return results;
+    }
+
+    return [];
+  }
+
+  async function handleDrop(e: React.DragEvent) {
     e.preventDefault();
-    handleFilesAdded(e.dataTransfer.files);
+    const items = e.dataTransfer.items;
+    if (!items?.length) return;
+
+    const allFiles: File[] = [];
+
+    for (const item of Array.from(items)) {
+      const entry = item.webkitGetAsEntry?.();
+      if (!entry) {
+        // Fallback: non-webkit browsers or raw file drops
+        const file = item.getAsFile();
+        if (file) allFiles.push(file);
+        continue;
+      }
+
+      const filesFromEntry = await collectFilesFromEntry(entry, "");
+      allFiles.push(...filesFromEntry);
+    }
+
+    handleFilesAdded(allFiles);
   }
 
   function handleDragOver(e: React.DragEvent) {
@@ -272,31 +356,34 @@ export function StepUploadForm({
         {/* File list */}
         {files.length > 0 && (
           <ul className="upload-form__file-list">
-            {files.map((file, idx) => (
-              <li
-                key={`${file.name}-${idx}`}
-                className="upload-form__file-item"
-              >
-                <FileText
-                  size={14}
-                  aria-hidden="true"
-                  className="upload-form__file-icon"
-                />
-                <span className="upload-form__file-name">{file.name}</span>
-                <span className="upload-form__file-size">
-                  {formatFileSize(file.size)}
-                </span>
-                <button
-                  type="button"
-                  className="upload-form__file-remove"
-                  onClick={() => removeFile(idx)}
-                  disabled={isSubmitting}
-                  aria-label={`${t.removeFileAriaLabel} ${file.name}`}
+            {files.map((file, idx) => {
+              const displayPath = getFilePath(file);
+              return (
+                <li
+                  key={`${displayPath}-${idx}`}
+                  className="upload-form__file-item"
                 >
-                  <X size={14} aria-hidden="true" />
-                </button>
-              </li>
-            ))}
+                  <FileText
+                    size={14}
+                    aria-hidden="true"
+                    className="upload-form__file-icon"
+                  />
+                  <span className="upload-form__file-name">{displayPath}</span>
+                  <span className="upload-form__file-size">
+                    {formatFileSize(file.size)}
+                  </span>
+                  <button
+                    type="button"
+                    className="upload-form__file-remove"
+                    onClick={() => removeFile(idx)}
+                    disabled={isSubmitting}
+                    aria-label={`${t.removeFileAriaLabel} ${displayPath}`}
+                  >
+                    <X size={14} aria-hidden="true" />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

@@ -1,13 +1,10 @@
 import { useState, useCallback } from "react";
-import {
-  setup2FA,
-  confirm2FA,
-  disable2FA,
-} from "../lib/auth/twoFactorApi";
+import { setup2FA, confirm2FA, disable2FA } from "../lib/auth/twoFactorApi";
 import { userStorage } from "../lib/auth/userStorage";
 import { toast } from "../lib/toast/toastBus";
 import { useTranslation } from "./useTranslation";
 import type { ApiError } from "../lib/apiClient";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 interface TwoFactorState {
   twoFactorEnabled: boolean;
@@ -64,9 +61,11 @@ export function useTwoFactor(): UseTwoFactorReturn {
         setupIsLoading: false,
         setupQrUri: qrUri,
       }));
-    } catch {
+    } catch (err) {
       setState((s) => ({ ...s, setupIsLoading: false }));
-      toast.error(t.setupModal.loadError);
+      if (!isSessionExpiredError(err)) {
+        toast.error(t.setupModal.loadError);
+      }
     }
   }, [t.setupModal.loadError]);
 
@@ -103,7 +102,11 @@ export function useTwoFactor(): UseTwoFactorReturn {
         setState((s) => ({ ...s, isConfirming: false, setupError: error }));
       }
     },
-    [t.setupModal.successMessage, t.setupModal.invalidCode, t.setupModal.loadError],
+    [
+      t.setupModal.successMessage,
+      t.setupModal.invalidCode,
+      t.setupModal.loadError,
+    ],
   );
 
   const openDisable = useCallback(() => {
@@ -137,7 +140,11 @@ export function useTwoFactor(): UseTwoFactorReturn {
         setState((s) => ({ ...s, isDisabling: false, disableError: error }));
       }
     },
-    [t.disableModal.successMessage, t.disableModal.invalidCode, t.disableModal.loadError],
+    [
+      t.disableModal.successMessage,
+      t.disableModal.invalidCode,
+      t.disableModal.loadError,
+    ],
   );
 
   return {

@@ -9,6 +9,7 @@ import {
 } from "../lib/users/usersApi";
 import { toast } from "../lib/toast/toastBus";
 import { useTranslation } from "./useTranslation";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 interface UsersState {
   users: UserDTO[];
@@ -34,9 +35,11 @@ export function useUsers(): UseUsersReturn {
   useEffect(() => {
     fetchUsers()
       .then((users) => setState({ users, isLoading: false, isSaving: false }))
-      .catch(() => {
+      .catch((err) => {
         setState((s) => ({ ...s, isLoading: false }));
-        toast.error(tu.loadError);
+        if (!isSessionExpiredError(err)) {
+          toast.error(tu.loadError);
+        }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -53,9 +56,11 @@ export function useUsers(): UseUsersReturn {
         }));
         toast.success(tu.modal.createSuccess);
         return true;
-      } catch {
+      } catch (err) {
         setState((s) => ({ ...s, isSaving: false }));
-        toast.error(tu.modal.createError);
+        if (!isSessionExpiredError(err)) {
+          toast.error(tu.modal.createError);
+        }
         return false;
       }
     },
@@ -74,9 +79,11 @@ export function useUsers(): UseUsersReturn {
         }));
         toast.success(tu.modal.updateSuccess);
         return true;
-      } catch {
+      } catch (err) {
         setState((s) => ({ ...s, isSaving: false }));
-        toast.error(tu.modal.updateError);
+        if (!isSessionExpiredError(err)) {
+          toast.error(tu.modal.updateError);
+        }
         return false;
       }
     },

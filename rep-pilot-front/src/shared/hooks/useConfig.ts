@@ -8,6 +8,7 @@ import {
 import { toast } from "../lib/toast/toastBus";
 import { useTranslation } from "./useTranslation";
 import type { ApiError } from "../lib/apiClient";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 interface OpenAIConfig {
   url: string;
@@ -74,7 +75,9 @@ export function useConfig(): UseConfigReturn {
           setState((s) => ({ ...s, isLoading: false }));
         } else {
           setState((s) => ({ ...s, isLoading: false, hasLoadError: true }));
-          toast.error(ta.loadError);
+          if (!isSessionExpiredError(err)) {
+            toast.error(ta.loadError);
+          }
         }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,9 +123,11 @@ export function useConfig(): UseConfigReturn {
         isSavingGit: false,
       }));
       toast.success(ta.saveSuccess);
-    } catch {
+    } catch (err) {
       setState((s) => ({ ...s, isSavingGit: false }));
-      toast.error(ta.saveError);
+      if (!isSessionExpiredError(err)) {
+        toast.error(ta.saveError);
+      }
     }
   }, [state.gitInstances, ta.saveSuccess, ta.saveError]);
 
@@ -147,9 +152,11 @@ export function useConfig(): UseConfigReturn {
         isSavingOpenAI: false,
       }));
       toast.success(toai.saveSuccess);
-    } catch {
+    } catch (err) {
       setState((s) => ({ ...s, isSavingOpenAI: false }));
-      toast.error(toai.saveError);
+      if (!isSessionExpiredError(err)) {
+        toast.error(toai.saveError);
+      }
     }
   }, [state.openaiConfig, toai.saveSuccess, toai.saveError]);
 
@@ -168,9 +175,11 @@ export function useConfig(): UseConfigReturn {
         isSavingTwoFactor: false,
       }));
       toast.success(t2fa.saveSuccess);
-    } catch {
+    } catch (err) {
       setState((s) => ({ ...s, isSavingTwoFactor: false }));
-      toast.error(t2fa.saveError);
+      if (!isSessionExpiredError(err)) {
+        toast.error(t2fa.saveError);
+      }
     }
   }, [state.enableTwoFactor, t2fa.saveSuccess, t2fa.saveError]);
 

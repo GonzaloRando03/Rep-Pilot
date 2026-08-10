@@ -8,6 +8,7 @@ import {
 } from "../lib/projects/projectsApi";
 import { toast } from "../lib/toast/toastBus";
 import { useTranslation } from "./useTranslation";
+import { isSessionExpiredError } from "../lib/apiClient";
 
 export interface UseProjectDetailReturn {
   project: ProjectResponse | null;
@@ -52,8 +53,10 @@ export function useProjectDetail(id: string): UseProjectDetailReturn {
         setProject(updated);
         toast.success(tp.detail.editSuccess);
         return true;
-      } catch {
-        toast.error(tp.detail.editError);
+      } catch (err) {
+        if (!isSessionExpiredError(err)) {
+          toast.error(tp.detail.editError);
+        }
         return false;
       } finally {
         setIsUpdating(false);
@@ -68,8 +71,10 @@ export function useProjectDetail(id: string): UseProjectDetailReturn {
       await deleteProject(id);
       toast.success(tp.detail.deleteSuccess);
       return true;
-    } catch {
-      toast.error(tp.detail.deleteError);
+    } catch (err) {
+      if (!isSessionExpiredError(err)) {
+        toast.error(tp.detail.deleteError);
+      }
       return false;
     } finally {
       setIsDeleting(false);
