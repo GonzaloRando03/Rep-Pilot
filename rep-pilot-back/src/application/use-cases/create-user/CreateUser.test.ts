@@ -3,23 +3,17 @@ import { CreateUser } from "./CreateUser";
 import {
   mockUserRepository,
   mockPasswordHasher,
-  mockConfigRepository,
   buildUser,
-  buildAppConfig,
 } from "../__test-helpers";
 import { Language } from "../../../domain/enums/Language";
 
-function setup(enableTwoFactor = false) {
+function setup() {
   const userRepo = mockUserRepository();
   const ph = mockPasswordHasher();
-  const configRepo = mockConfigRepository({
-    find: vi.fn().mockResolvedValue(buildAppConfig({ enableTwoFactor })),
-  });
   return {
-    useCase: new CreateUser(userRepo, ph, Language.EN, configRepo),
+    useCase: new CreateUser(userRepo, ph, Language.EN),
     userRepo,
     ph,
-    configRepo,
   };
 }
 
@@ -78,16 +72,8 @@ describe("CreateUser", () => {
     expect(r.language).toBe("en");
   });
 
-  it("should enable 2FA when global config has enableTwoFactor=true", async () => {
-    const { useCase, userRepo, ph } = setup(true);
-    vi.mocked(userRepo.findByUsername).mockResolvedValue(null);
-    vi.mocked(ph.hash).mockResolvedValue("hashed");
-    const r = await useCase.execute(input);
-    expect(r.twoFactorEnabled).toBe(true);
-  });
-
-  it("should not enable 2FA when global config has enableTwoFactor=false", async () => {
-    const { useCase, userRepo, ph } = setup(false);
+  it("should always create user with twoFactorEnabled=false regardless of global config", async () => {
+    const { useCase, userRepo, ph } = setup();
     vi.mocked(userRepo.findByUsername).mockResolvedValue(null);
     vi.mocked(ph.hash).mockResolvedValue("hashed");
     const r = await useCase.execute(input);

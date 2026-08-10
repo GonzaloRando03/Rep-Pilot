@@ -12,6 +12,7 @@ import {
   buildAppConfig,
 } from "../__test-helpers";
 import { TwoFactorRequiredError } from "../../../domain/errors/TwoFactorRequiredError";
+import { TwoFactorSetupRequiredError } from "../../../domain/errors/TwoFactorSetupRequiredError";
 import { InvalidTwoFactorCodeError } from "../../../domain/errors/InvalidTwoFactorCodeError";
 
 function setup() {
@@ -158,7 +159,71 @@ describe("Login", () => {
     vi.mocked(ur.findById).mockResolvedValue(userWith2fa);
     vi.mocked(ph.compare).mockResolvedValue(true);
 
-    await expect(useCase.execute(input)).rejects.toBeInstanceOf(TwoFactorRequiredError);
+    await expect(useCase.execute(input)).rejects.toBeInstanceOf(
+      TwoFactorRequiredError,
+    );
+  });
+
+  it("should throw TwoFactorSetupRequiredError with token when 2FA is globally enabled but user has no 2FA configured", async () => {
+    const { useCase, ur, ph, cr, ts } = setup();
+    vi.mocked(cr.find).mockResolvedValue(
+      buildAppConfig({ enableTwoFactor: true }),
+    );
+    const userWithout2fa = buildUser({
+      id: "u1",
+      username: "alice",
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+    });
+    vi.mocked(ur.findByUsername).mockResolvedValue(userWithout2fa);
+    vi.mocked(ur.findById).mockResolvedValue(userWithout2fa);
+    vi.mocked(ph.compare).mockResolvedValue(true);
+    vi.mocked(ts.sign).mockReturnValue("scoped.2fa-setup.token");
+
+    let caught: TwoFactorSetupRequiredError | null = null;
+    try {
+      await useCase.execute(input);
+    } catch (e) {
+      caught = e as TwoFactorSetupRequiredError;
+    }
+
+    expect(caught).toBeInstanceOf(TwoFactorSetupRequiredError);
+    expect(caught!.token).toBe("scoped.2fa-setup.token");
+    expect(ts.sign).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "2fa_setup" }),
+      "10m",
+    );
+  });
+
+  it("should throw TwoFactorSetupRequiredError when user has twoFactorEnabled=true but no secret (corrupt state)", async () => {
+    const { useCase, ur, ph, cr, ts } = setup();
+    vi.mocked(cr.find).mockResolvedValue(
+      buildAppConfig({ enableTwoFactor: true }),
+    );
+    const corruptUser = buildUser({
+      id: "u1",
+      username: "alice",
+      twoFactorEnabled: true,
+      twoFactorSecret: null,
+    });
+    vi.mocked(ur.findByUsername).mockResolvedValue(corruptUser);
+    vi.mocked(ur.findById).mockResolvedValue(corruptUser);
+    vi.mocked(ph.compare).mockResolvedValue(true);
+    vi.mocked(ts.sign).mockReturnValue("scoped.2fa-setup.token");
+
+    let caught: TwoFactorSetupRequiredError | null = null;
+    try {
+      await useCase.execute(input);
+    } catch (e) {
+      caught = e as TwoFactorSetupRequiredError;
+    }
+
+    expect(caught).toBeInstanceOf(TwoFactorSetupRequiredError);
+    expect(caught!.token).toBe("scoped.2fa-setup.token");
+    expect(ts.sign).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: "2fa_setup" }),
+      "10m",
+    );
   });
 
   it("should throw InvalidTwoFactorCodeError when code is wrong", async () => {
@@ -177,8 +242,9 @@ describe("Login", () => {
     vi.mocked(ph.compare).mockResolvedValue(true);
     vi.mocked(totp.verify).mockResolvedValue(false);
 
-    await expect(useCase.execute({ ...input, totpCode: "000000" }))
-      .rejects.toBeInstanceOf(InvalidTwoFactorCodeError);
+    await expect(
+      useCase.execute({ ...input, totpCode: "000000" }),
+    ).rejects.toBeInstanceOf(InvalidTwoFactorCodeError);
   });
 
   it("should login successfully when 2FA code is correct", async () => {

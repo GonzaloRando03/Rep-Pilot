@@ -34,7 +34,7 @@ interface UseAuthReturn extends AuthState {
   logout: () => void;
   updateLanguage: (language: Language) => Promise<void>;
   clearTwoFactor: () => void;
-  completeForcedSetup: () => void;
+  completeForcedSetup: () => Promise<void>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -113,7 +113,47 @@ export function useAuth(): UseAuthReturn {
       }
     } catch (err) {
       const apiError = err as ApiError;
-      if (apiError.status === 401 && apiError.requiresTwoFactor) {
+
+      // Debug: log the full API error to diagnose 2FA flow issues
+      console.error(
+        "[useAuth.login] API error:",
+        JSON.stringify({
+          status: apiError.status,
+          message: apiError.message,
+          requiresTwoFactor: apiError.requiresTwoFactor,
+          requiresTwoFactorSetup: apiError.requiresTwoFactorSetup,
+          hasToken:
+            typeof apiError.token === "string" && apiError.token.length > 0,
+        }),
+      );
+
+      if (apiError.status === 401 && apiError.requiresTwoFactorSetup) {
+        // User hasn't configured 2FA yet but it's globally enforced → force setup.
+        // The backend may include a temporary token so the frontend can call /api/me/2fa/setup.
+        if (apiError.token) {
+          tokenStorage.set(apiError.token);
+        }
+        setState((s) => ({
+          ...s,
+          isLoading: false,
+          requiresTwoFactor: false,
+          requiresTwoFactorSetup: true,
+        }));
+      } else if (
+        apiError.status === 401 &&
+        apiError.requiresTwoFactor &&
+        apiError.token
+      ) {
+        // Fallback: backend sent requiresTwoFactor + a token but forgot requiresTwoFactorSetup.
+        // Treat as forced setup since a scoped token was included.
+        tokenStorage.set(apiError.token);
+        setState((s) => ({
+          ...s,
+          isLoading: false,
+          requiresTwoFactor: false,
+          requiresTwoFactorSetup: true,
+        }));
+      } else if (apiError.status === 401 && apiError.requiresTwoFactor) {
         setState((s) => ({ ...s, isLoading: false, requiresTwoFactor: true }));
       } else if (apiError.status === 401 && totpCode !== undefined) {
         toast.error(t.auth.toast.invalidTwoFactorCode);
@@ -141,11 +181,23 @@ export function useAuth(): UseAuthReturn {
     setState((s) => ({ ...s, requiresTwoFactor: false }));
   }
 
-  function completeForcedSetup(): void {
-    const user = userStorage.get();
+  async function completeForcedSetup(): Promise<void> {
+    // If the forced setup was triggered via a 401 path, the user may not be in storage yet.
+    // Fetch it now that we have a valid token.
+    let user = userStorage.get();
+    if (!user) {
+      try {
+        user = await fetchCurrentUser();
+        userStorage.set(user);
+        setLanguage(user.language);
+      } catch {
+        // If fetching fails, proceed with whatever we have.
+      }
+    }
     setState((s) => ({
       ...s,
       isAuthenticated: true,
+      user: user ?? s.user,
       requiresTwoFactorSetup: false,
     }));
     if (user) toast.success(t.auth.toast.welcome(user.name));

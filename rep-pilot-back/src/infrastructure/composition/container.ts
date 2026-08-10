@@ -189,12 +189,7 @@ export function buildHttpApp() {
     logger,
   );
   const createUser = withLogging(
-    new CreateUser(
-      userRepository,
-      passwordHasher,
-      defaultLanguage,
-      configRepository,
-    ),
+    new CreateUser(userRepository, passwordHasher, defaultLanguage),
     "CreateUser",
     logger,
   );

@@ -7,6 +7,7 @@ import { InvalidTwoFactorCodeError } from "../../../../domain/errors/InvalidTwoF
 import { LlmProviderError } from "../../../../domain/errors/LlmProviderError";
 import { NotFoundError } from "../../../../domain/errors/NotFoundError";
 import { TwoFactorRequiredError } from "../../../../domain/errors/TwoFactorRequiredError";
+import { TwoFactorSetupRequiredError } from "../../../../domain/errors/TwoFactorSetupRequiredError";
 import { Logger } from "../../../../application/ports/out/Logger";
 
 export function buildErrorHandler(logger: Logger) {
@@ -36,6 +37,11 @@ export function buildErrorHandler(logger: Logger) {
 
     if (err instanceof TwoFactorRequiredError) {
       res.status(401).json({ message: err.message, requiresTwoFactor: true });
+      return;
+    }
+
+    if (err instanceof TwoFactorSetupRequiredError) {
+      res.status(401).json({ requiresTwoFactorSetup: true, token: err.token });
       return;
     }
 

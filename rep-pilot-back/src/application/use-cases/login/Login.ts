@@ -1,5 +1,6 @@
 import { InvalidCredentialsError } from "../../../domain/errors/InvalidCredentialsError";
 import { TwoFactorRequiredError } from "../../../domain/errors/TwoFactorRequiredError";
+import { TwoFactorSetupRequiredError } from "../../../domain/errors/TwoFactorSetupRequiredError";
 import { InvalidTwoFactorCodeError } from "../../../domain/errors/InvalidTwoFactorCodeError";
 import { AuthTokenDTO, LoginDTO } from "../../dto/AuthDTO";
 import { LoginUseCase } from "../../ports/in/LoginUseCase";
@@ -10,6 +11,8 @@ import { PasswordHasher } from "../../ports/out/PasswordHasher";
 import { TokenService } from "../../ports/out/TokenService";
 import { UserRepository } from "../../ports/out/UserRepository";
 import { TotpPort } from "../../ports/out/TotpPort";
+
+const TWO_FA_SETUP_TOKEN_EXPIRY = "10m";
 
 export class Login implements LoginUseCase {
   constructor(
@@ -111,12 +114,42 @@ export class Login implements LoginUseCase {
     totpCode: string | undefined,
   ): Promise<void> {
     const config = await this.configRepository.find();
-    if (!config?.enableTwoFactor) return;
+    if (!config?.enableTwoFactor) {
+      console.log("[verifyTwoFactor] Global 2FA is disabled → skipping");
+      return;
+    }
+
+    console.log(
+      `[verifyTwoFactor] Global 2FA enabled. userId=${userId} hasTotpCode=${totpCode !== undefined}`,
+    );
 
     const user = await this.userRepository.findById(userId);
-    if (!user?.twoFactorEnabled) return;
+    console.log(
+      `[verifyTwoFactor] User found: username=${user?.username}, twoFactorEnabled=${user?.twoFactorEnabled}, hasSecret=${user?.twoFactorSecret !== null}`,
+    );
 
-    if (!totpCode) throw new TwoFactorRequiredError();
+    if (!user?.twoFactorEnabled || !user?.twoFactorSecret) {
+      console.log(
+        `[verifyTwoFactor] User needs 2FA setup (enabled=${user?.twoFactorEnabled}, hasSecret=${user?.twoFactorSecret !== null}) → throwing TwoFactorSetupRequiredError`,
+      );
+      const setupToken = this.tokenService.sign(
+        {
+          sub: userId,
+          username: user?.username ?? "",
+          isAdmin: user?.isAdmin ?? false,
+          scope: "2fa_setup",
+        },
+        TWO_FA_SETUP_TOKEN_EXPIRY,
+      );
+      throw new TwoFactorSetupRequiredError(setupToken);
+    }
+
+    if (!totpCode) {
+      console.log(
+        "[verifyTwoFactor] User has 2FA fully configured but no totpCode provided → throwing TwoFactorRequiredError",
+      );
+      throw new TwoFactorRequiredError();
+    }
 
     const isValid = await this.totp.verify(totpCode, user.twoFactorSecret!);
     if (!isValid) throw new InvalidTwoFactorCodeError();

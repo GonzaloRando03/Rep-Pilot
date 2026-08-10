@@ -6,8 +6,14 @@ import { ApiTokenRepository } from "../../../../application/ports/out/ApiTokenRe
 import { UserRepository } from "../../../../application/ports/out/UserRepository";
 import { createHash } from "crypto";
 
+const ALLOWED_2FA_SETUP_PATHS = ["/api/me/2fa/setup", "/api/me/2fa/confirm"];
+
 let _apiTokenRepo: ApiTokenRepository | null = null;
 let _userRepo: UserRepository | null = null;
+
+function is2faSetupScopeAllowed(req: Request): boolean {
+  return ALLOWED_2FA_SETUP_PATHS.some((p) => req.originalUrl === p);
+}
 
 /**
  * Inyecta los repositorios necesarios para validar API tokens.
@@ -41,6 +47,15 @@ export function authenticate(
       AuthenticatedUser,
       "authMethod"
     >;
+
+    // Restringir tokens con scope "2fa_setup" solo a endpoints de configuración
+    if (payload.scope === "2fa_setup" && !is2faSetupScopeAllowed(req)) {
+      res.status(403).json({
+        message: "Token scope restricted to 2FA setup",
+      });
+      return;
+    }
+
     req.user = { ...payload, authMethod: "jwt" };
     next();
     return;

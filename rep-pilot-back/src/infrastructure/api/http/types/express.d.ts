@@ -7,6 +7,7 @@ export interface AuthenticatedUser {
   username: string;
   isAdmin: boolean;
   authMethod: AuthMethod;
+  scope?: string;
 }
 
 declare global {

@@ -34,7 +34,10 @@ export function ForcedTwoFactorSetupPage({
         setQrUri(uri);
         setStep("qr");
       })
-      .catch(() => setStep("load-error"));
+      .catch((err) => {
+        console.error("[ForcedTwoFactorSetupPage] setup2FA failed:", err);
+        setStep("load-error");
+      });
   }, []);
 
   function validateCode(): boolean {
@@ -90,7 +93,10 @@ export function ForcedTwoFactorSetupPage({
 
         <div className="forced-2fa-page__body">
           {step === "loading" && (
-            <div className="forced-2fa-page__loading" aria-label={t.common.loading}>
+            <div
+              className="forced-2fa-page__loading"
+              aria-label={t.common.loading}
+            >
               <span className="forced-2fa-page__spinner" />
             </div>
           )}
@@ -150,12 +156,17 @@ export function ForcedTwoFactorSetupPage({
               <button
                 type="button"
                 className="forced-2fa-page__submit"
-                onClick={() => { void handleConfirm(); }}
+                onClick={() => {
+                  void handleConfirm();
+                }}
                 disabled={isConfirming}
                 aria-busy={isConfirming}
               >
                 {isConfirming ? (
-                  <span className="forced-2fa-page__btn-spinner" aria-hidden="true" />
+                  <span
+                    className="forced-2fa-page__btn-spinner"
+                    aria-hidden="true"
+                  />
                 ) : null}
                 {isConfirming ? tSetup.confirming : tSetup.confirmButton}
               </button>
@@ -163,7 +174,12 @@ export function ForcedTwoFactorSetupPage({
               <button
                 type="button"
                 className="forced-2fa-page__back"
-                onClick={() => { setStep("qr"); setCode(""); setCodeError(undefined); setConfirmError(null); }}
+                onClick={() => {
+                  setStep("qr");
+                  setCode("");
+                  setCodeError(undefined);
+                  setConfirmError(null);
+                }}
                 disabled={isConfirming}
               >
                 {tSetup.backButton}
@@ -178,7 +194,10 @@ export function ForcedTwoFactorSetupPage({
               onClick={() => {
                 setStep("loading");
                 setup2FA()
-                  .then(({ qrUri: uri }) => { setQrUri(uri); setStep("qr"); })
+                  .then(({ qrUri: uri }) => {
+                    setQrUri(uri);
+                    setStep("qr");
+                  })
                   .catch(() => setStep("load-error"));
               }}
             >
