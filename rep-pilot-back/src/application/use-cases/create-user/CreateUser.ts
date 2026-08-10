@@ -3,6 +3,7 @@ import { Language } from "../../../domain/enums/Language";
 import { CreateUserDTO, UserDTO } from "../../dto/UserDTO";
 import { toUserDTO } from "../../mappers/toUserDTO";
 import { CreateUserUseCase } from "../../ports/in/CreateUserUseCase";
+import { ConfigRepository } from "../../ports/out/ConfigRepository";
 import { PasswordHasher } from "../../ports/out/PasswordHasher";
 import { UserRepository } from "../../ports/out/UserRepository";
 import { User } from "../../../domain/entities/User";
@@ -12,6 +13,7 @@ export class CreateUser implements CreateUserUseCase {
     private readonly userRepository: UserRepository,
     private readonly passwordHasher: PasswordHasher,
     private readonly defaultLanguage: Language,
+    private readonly configRepository: ConfigRepository,
   ) {}
 
   async execute(input: CreateUserDTO): Promise<UserDTO> {
@@ -22,6 +24,7 @@ export class CreateUser implements CreateUserUseCase {
       );
     }
 
+    const config = await this.configRepository.find();
     const language = this.resolveLanguage(input.language);
     const hashedPassword = await this.passwordHasher.hash(input.password);
 
@@ -31,6 +34,7 @@ export class CreateUser implements CreateUserUseCase {
       password: hashedPassword,
       isAdmin: input.isAdmin ?? false,
       language,
+      twoFactorEnabled: config?.enableTwoFactor ?? false,
       email: input.email,
     });
 
