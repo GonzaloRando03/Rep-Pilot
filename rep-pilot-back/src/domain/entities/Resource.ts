@@ -195,4 +195,23 @@ export class Resource {
       this.hasFiles,
     );
   }
+
+  withCreatedBy(newCreatedBy: string): Resource {
+    if (!newCreatedBy || newCreatedBy.trim().length === 0) {
+      throw new DomainValidationError("Resource createdBy is required");
+    }
+    return new Resource(
+      this.id,
+      this.name,
+      this.type,
+      this.description,
+      this.gitUrl,
+      this.path,
+      [...this.stars],
+      [...this.tags],
+      this.createdAt,
+      newCreatedBy.trim(),
+      this.hasFiles,
+    );
+  }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { tokenStorage } from "../lib/auth/tokenStorage";
 import { userStorage } from "../lib/auth/userStorage";
 import { loginRequest } from "../lib/auth/authApi";
@@ -9,6 +9,7 @@ import {
   setOnUnauthorized,
   clearOnUnauthorized,
   resetSessionExpired,
+  apiFetch,
   type ApiError,
 } from "../lib/apiClient";
 import type { User } from "../lib/auth/userStorage";
@@ -41,6 +42,9 @@ export function useAuth(): UseAuthReturn {
   const { setLanguage } = useLanguage();
   const t = useTranslation();
 
+  // Ref to suppress onUnauthorized toast during 2FA setup transition
+  const isTransitioningFrom2faSetup = useRef(false);
+
   const [state, setState] = useState<AuthState>({
     isAuthenticated: tokenStorage.exists(),
     isLoading: false,
@@ -51,6 +55,7 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     setOnUnauthorized(() => {
+      if (isTransitioningFrom2faSetup.current) return;
       tokenStorage.clear();
       userStorage.clear();
       setLanguage(LanguageEnum.En);
@@ -133,6 +138,7 @@ export function useAuth(): UseAuthReturn {
         if (apiError.token) {
           tokenStorage.set(apiError.token);
         }
+        resetSessionExpired();
         setState((s) => ({
           ...s,
           isLoading: false,
@@ -147,6 +153,7 @@ export function useAuth(): UseAuthReturn {
         // Fallback: backend sent requiresTwoFactor + a token but forgot requiresTwoFactorSetup.
         // Treat as forced setup since a scoped token was included.
         tokenStorage.set(apiError.token);
+        resetSessionExpired();
         setState((s) => ({
           ...s,
           isLoading: false,
@@ -182,12 +189,16 @@ export function useAuth(): UseAuthReturn {
   }
 
   async function completeForcedSetup(): Promise<void> {
+    // Suppress onUnauthorized during transition to avoid misleading toasts
+    isTransitioningFrom2faSetup.current = true;
+
     // If the forced setup was triggered via a 401 path, the user may not be in storage yet.
-    // Fetch it now that we have a valid token.
+    // Fetch it now that we have a valid token. Use skipUnauthorizedRedirect so a transient
+    // failure doesn't clear the session or show a misleading "Session expired" toast.
     let user = userStorage.get();
     if (!user) {
       try {
-        user = await fetchCurrentUser();
+        user = await apiFetch<User>("/api/users/me", {}, true);
         userStorage.set(user);
         setLanguage(user.language);
       } catch {
@@ -200,6 +211,8 @@ export function useAuth(): UseAuthReturn {
       user: user ?? s.user,
       requiresTwoFactorSetup: false,
     }));
+    resetSessionExpired();
+    isTransitioningFrom2faSetup.current = false;
     if (user) toast.success(t.auth.toast.welcome(user.name));
   }
 

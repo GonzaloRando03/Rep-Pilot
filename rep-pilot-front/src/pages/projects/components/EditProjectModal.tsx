@@ -209,30 +209,13 @@ export function EditProjectModal({
     const items = e.dataTransfer.items;
     if (!items?.length) return;
 
-    const newFiles: DroppedFile[] = [];
-    let hasDirectory = false;
-
-    for (const item of Array.from(items)) {
-      const entry = item.webkitGetAsEntry?.();
-      if (!entry) continue;
-
-      if (entry.isDirectory) {
-        hasDirectory = true;
-        const dirFiles = await traverseEntry(entry, "");
-        newFiles.push(...dirFiles);
-      } else if (entry.isFile) {
-        const file = item.getAsFile();
-        if (file && isTextFile(entry.name)) {
-          const content = await readFileAsText(file);
-          newFiles.push({ path: entry.name, content });
-        }
-      }
-    }
-
-    if (!hasDirectory) {
+    const entry = items[0]?.webkitGetAsEntry?.();
+    if (items.length !== 1 || !entry || !entry.isDirectory) {
       setDragError(t.dropFolderRequired);
       return;
     }
+
+    const newFiles = await traverseEntry(entry, "");
 
     if (newFiles.length === 0) {
       setDragError(t.dropNoTextFiles);

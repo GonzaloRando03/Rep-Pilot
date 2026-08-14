@@ -8,6 +8,7 @@ import { CreateApiTokenUseCase } from "../../../../application/ports/in/CreateAp
 import { ListApiTokensUseCase } from "../../../../application/ports/in/ListApiTokensUseCase";
 import { RevokeApiTokenUseCase } from "../../../../application/ports/in/RevokeApiTokenUseCase";
 import { ChangePasswordUseCase } from "../../../../application/ports/in/ChangePasswordUseCase";
+import { DeleteUserUseCase } from "../../../../application/ports/in/DeleteUserUseCase";
 import { AuthenticatedRequest } from "../types/express.d";
 
 export class UserController {
@@ -21,6 +22,7 @@ export class UserController {
     private readonly listApiTokensUseCase: ListApiTokensUseCase,
     private readonly revokeApiTokenUseCase: RevokeApiTokenUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
+    private readonly deleteUserUseCase: DeleteUserUseCase,
   ) {}
 
   create = async (
@@ -102,6 +104,20 @@ export class UserController {
         email: req.body.email,
       });
       res.status(200).json(user);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  delete = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { sub } = (req as AuthenticatedRequest).user;
+      await this.deleteUserUseCase.execute(String(req.params.id), sub);
+      res.status(204).send();
     } catch (error) {
       next(error);
     }

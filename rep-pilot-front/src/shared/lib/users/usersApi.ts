@@ -48,3 +48,9 @@ export function updateUser(
     body: JSON.stringify(payload),
   });
 }
+
+export function deleteUser(id: string): Promise<void> {
+  return apiFetch<void>(`/api/users/${id}`, {
+    method: "DELETE",
+  });
+}

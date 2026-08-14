@@ -3,6 +3,7 @@ import {
   fetchUsers,
   createUser,
   updateUser,
+  deleteUser,
   type UserDTO,
   type CreateUserPayload,
   type UpdateUserPayload,
@@ -15,11 +16,13 @@ interface UsersState {
   users: UserDTO[];
   isLoading: boolean;
   isSaving: boolean;
+  isDeleting: boolean;
 }
 
 export interface UseUsersReturn extends UsersState {
   create: (data: CreateUserPayload) => Promise<boolean>;
   update: (id: string, data: UpdateUserPayload) => Promise<boolean>;
+  remove: (id: string) => Promise<boolean>;
 }
 
 export function useUsers(): UseUsersReturn {
@@ -30,11 +33,19 @@ export function useUsers(): UseUsersReturn {
     users: [],
     isLoading: true,
     isSaving: false,
+    isDeleting: false,
   });
 
   useEffect(() => {
     fetchUsers()
-      .then((users) => setState({ users, isLoading: false, isSaving: false }))
+      .then((users) =>
+        setState({
+          users,
+          isLoading: false,
+          isSaving: false,
+          isDeleting: false,
+        }),
+      )
       .catch((err) => {
         setState((s) => ({ ...s, isLoading: false }));
         if (!isSessionExpiredError(err)) {
@@ -90,5 +101,28 @@ export function useUsers(): UseUsersReturn {
     [tu.modal.updateSuccess, tu.modal.updateError],
   );
 
-  return { ...state, create, update };
+  const remove = useCallback(
+    async (id: string): Promise<boolean> => {
+      setState((s) => ({ ...s, isDeleting: true }));
+      try {
+        await deleteUser(id);
+        setState((s) => ({
+          ...s,
+          users: s.users.filter((u) => u.id !== id),
+          isDeleting: false,
+        }));
+        toast.success(tu.deleteSuccess);
+        return true;
+      } catch (err) {
+        setState((s) => ({ ...s, isDeleting: false }));
+        if (!isSessionExpiredError(err)) {
+          toast.error(tu.deleteError);
+        }
+        return false;
+      }
+    },
+    [tu.deleteSuccess, tu.deleteError],
+  );
+
+  return { ...state, create, update, remove };
 }

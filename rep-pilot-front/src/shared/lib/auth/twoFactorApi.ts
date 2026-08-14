@@ -1,4 +1,4 @@
-import { apiFetch } from "../apiClient";
+import { apiFetch, resetSessionExpired } from "../apiClient";
 
 export interface SetupTwoFactorResponse {
   qrUri: string;
@@ -12,12 +12,16 @@ export function setup2FA(): Promise<SetupTwoFactorResponse> {
   );
 }
 
-export function confirm2FA(totpCode: string): Promise<void> {
-  return apiFetch<void>(
+export function confirm2FA(totpCode: string): Promise<{ token: string }> {
+  return apiFetch<{ token: string }>(
     "/api/me/2fa/confirm",
     { method: "POST", body: JSON.stringify({ totpCode }) },
     true,
-  );
+  ).then((res) => {
+    localStorage.setItem("auth_token", res.token);
+    resetSessionExpired();
+    return res;
+  });
 }
 
 export function disable2FA(totpCode: string): Promise<void> {

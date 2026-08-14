@@ -147,3 +147,67 @@
   border-color: var(--color-border-default);
   color: var(--color-text-primary);
 }
+
+/* Danger button (ghost variant) */
+.admin-btn--danger {
+  align-items: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: #f87171;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--type-label);
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.admin-btn--danger:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.3);
+  color: #fca5a5;
+}
+
+/* Danger button (solid variant for modal confirm) */
+.admin-btn--danger-solid {
+  align-items: center;
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: var(--type-body-sm);
+  font-weight: 500;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  transition: background 0.15s;
+}
+
+.admin-btn--danger-solid:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.admin-btn--danger-solid:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Modal description & actions for delete confirmation */
+.modal-description {
+  color: var(--color-text-secondary);
+  font-size: var(--type-body-sm);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  padding-top: var(--space-2);
+}

@@ -204,6 +204,12 @@ export const es: Translations = {
       adminBadge: "Admin",
       userBadge: "Usuario",
       editButton: "Editar",
+      deleteButton: "Eliminar",
+      deleteConfirmTitle: "Eliminar usuario",
+      deleteConfirmMessage:
+        "¿Estás seguro de que quieres eliminar a este usuario? Se le quitará de todos los proyectos y sus recursos se reasignarán al administrador del sistema.",
+      deleteSuccess: "Usuario eliminado correctamente.",
+      deleteError: "No se pudo eliminar el usuario. Inténtalo de nuevo.",
       emptyTitle: "Sin usuarios",
       emptyDescription: "Todavía no existe ninguna cuenta de usuario.",
       loadError: "No se pudo cargar los usuarios. Inténtalo de nuevo.",
@@ -604,7 +610,8 @@ export const es: Translations = {
         dropZonePlaceholder: "Arrastra aquí una carpeta para añadir archivos",
         dropZoneHint:
           "Se leerán los archivos de texto del directorio y sus subcarpetas",
-        dropFolderRequired: "Arrastra una carpeta, no archivos sueltos.",
+        dropFolderRequired:
+          "Arrastra una única carpeta, no archivos sueltos ni varias carpetas.",
         dropNoTextFiles: "No se encontraron archivos de texto en la carpeta.",
         dropNoRequiredFiles: "La carpeta no contiene archivos válidos.",
         groupLabel: "Grupo",
@@ -647,7 +654,8 @@ export const es: Translations = {
       dropZonePlaceholder: "Arrastra aquí una carpeta",
       dropZoneHint:
         "Se leerán los archivos de texto del directorio y sus subcarpetas",
-      dropFolderRequired: "Arrastra una carpeta, no archivos sueltos.",
+      dropFolderRequired:
+        "Arrastra una única carpeta, no archivos sueltos ni varias carpetas.",
       dropNoTextFiles: "No se encontraron archivos de texto en la carpeta.",
       dropNoRequiredFiles: "La carpeta no es válida.",
       filesDetected: (n) =>

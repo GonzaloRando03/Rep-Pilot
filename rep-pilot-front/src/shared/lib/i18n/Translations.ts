@@ -179,6 +179,11 @@ export interface Translations {
       adminBadge: string;
       userBadge: string;
       editButton: string;
+      deleteButton: string;
+      deleteConfirmTitle: string;
+      deleteConfirmMessage: string;
+      deleteSuccess: string;
+      deleteError: string;
       emptyTitle: string;
       emptyDescription: string;
       loadError: string;

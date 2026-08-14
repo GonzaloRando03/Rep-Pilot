@@ -34,6 +34,7 @@ export function buildUserRoutes(controller: UserController): Router {
   router.post("/", requireAdmin, validateCreateUser, controller.create);
   router.get("/", requireAdmin, controller.list);
   router.patch("/:id", requireAdmin, validateUpdateUser, controller.update);
+  router.delete("/:id", requireAdmin, controller.delete);
 
   return router;
 }

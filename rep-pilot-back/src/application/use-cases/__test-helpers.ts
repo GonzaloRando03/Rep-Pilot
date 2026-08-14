@@ -72,6 +72,7 @@ export function mockResourceRepository(
     findByGitUrl: vi.fn().mockResolvedValue([]),
     findStarredByUser: vi.fn().mockResolvedValue([]),
     findByTags: vi.fn().mockResolvedValue([]),
+    findByCreatedBy: vi.fn().mockResolvedValue([]),
     deleteById: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
@@ -106,16 +107,19 @@ export function mockUserRepository(
     findById: vi.fn().mockResolvedValue(null),
     findByUsername: vi.fn().mockResolvedValue(null),
     findAll: vi.fn().mockResolvedValue([]),
+    deleteById: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
 
-export function mockTotpPort(
-  overrides: Partial<TotpPort> = {},
-): TotpPort {
+export function mockTotpPort(overrides: Partial<TotpPort> = {}): TotpPort {
   return {
     generateSecret: vi.fn().mockReturnValue("JBSWY3DPEHPK3PXP"),
-    generateQrUri: vi.fn().mockReturnValue("otpauth://totp/TestApp:user?secret=JBSWY3DPEHPK3PXP&issuer=TestApp"),
+    generateQrUri: vi
+      .fn()
+      .mockReturnValue(
+        "otpauth://totp/TestApp:user?secret=JBSWY3DPEHPK3PXP&issuer=TestApp",
+      ),
     verify: vi.fn().mockResolvedValue(true),
     ...overrides,
   };

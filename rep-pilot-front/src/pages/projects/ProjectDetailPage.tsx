@@ -29,6 +29,22 @@ interface TreeNode {
   [key: string]: TreeNode | boolean;
 }
 
+function compactLeadingDuplicateDirectory(tree: TreeNode): TreeNode {
+  const rootEntries = Object.entries(tree);
+  if (rootEntries.length !== 1) return tree;
+
+  const [rootName, rootValue] = rootEntries[0];
+  if (typeof rootValue !== "object" || rootValue === null) return tree;
+
+  const childEntries = Object.entries(rootValue);
+  if (childEntries.length !== 1 || childEntries[0][0] !== rootName) return tree;
+
+  const [, childValue] = childEntries[0];
+  return typeof childValue === "object" && childValue !== null
+    ? rootValue
+    : tree;
+}
+
 function flattenTree(
   tree: TreeNode,
   prefix = "",
@@ -437,7 +453,11 @@ export function ProjectDetailPage() {
             {td.directoryTreeTitle}
           </h2>
           <div className="pdt-tree-container">
-            <DirectoryTree tree={project.directoryTree as TreeNode} />
+            <DirectoryTree
+              tree={compactLeadingDuplicateDirectory(
+                project.directoryTree as TreeNode,
+              )}
+            />
           </div>
         </section>
       </div>

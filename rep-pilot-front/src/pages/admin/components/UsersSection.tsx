@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { UserPlus, Pencil, Users } from "lucide-react";
+import { UserPlus, Pencil, Trash2, Users } from "lucide-react";
+import { useAuth } from "../../../shared/hooks/useAuth";
 import type { UserDTO } from "../../../shared/lib/users/usersApi";
 import type {
   CreateUserPayload,
@@ -24,6 +25,11 @@ interface UsersSectionTranslations {
   adminBadge: string;
   userBadge: string;
   editButton: string;
+  deleteButton: string;
+  deleteConfirmTitle: string;
+  deleteConfirmMessage: string;
+  deleteSuccess: string;
+  deleteError: string;
   emptyTitle: string;
   emptyDescription: string;
   loadingAriaLabel: string;
@@ -58,11 +64,15 @@ interface UsersSectionProps {
 }
 
 export function UsersSection({ hook, t }: UsersSectionProps) {
-  const { users, isLoading, isSaving, create, update } = hook;
+  const { user: currentUser } = useAuth();
+  const { users, isLoading, isSaving, isDeleting, create, update, remove } =
+    hook;
   const [editingUser, setEditingUser] = useState<UserDTO | null | undefined>(
     undefined,
   );
+  const [deletingUser, setDeletingUser] = useState<UserDTO | null>(null);
   const isModalOpen = editingUser !== undefined;
+  const isDeleteModalOpen = deletingUser !== null;
 
   const handleSave = async (
     data: CreateUserPayload | UpdateUserPayload,
@@ -72,6 +82,14 @@ export function UsersSection({ hook, t }: UsersSectionProps) {
       return update(userId, data as UpdateUserPayload);
     }
     return create(data as CreateUserPayload);
+  };
+
+  const handleDeleteConfirm = async (): Promise<void> => {
+    if (!deletingUser) return;
+    const success = await remove(deletingUser.id);
+    if (success) {
+      setDeletingUser(null);
+    }
   };
 
   return (
@@ -146,6 +164,17 @@ export function UsersSection({ hook, t }: UsersSectionProps) {
                       <Pencil size={14} aria-hidden="true" />
                       {t.editButton}
                     </button>
+                    {currentUser?.id !== user.id && (
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--danger"
+                        onClick={() => setDeletingUser(user)}
+                        disabled={isDeleting}
+                      >
+                        <Trash2 size={14} aria-hidden="true" />
+                        {t.deleteButton}
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -162,6 +191,35 @@ export function UsersSection({ hook, t }: UsersSectionProps) {
           onClose={() => setEditingUser(undefined)}
           t={t.modal}
         />
+      )}
+
+      {isDeleteModalOpen && deletingUser && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <div className="modal-card">
+            <div className="modal-card__header">
+              <h3 className="modal-card__title">{t.deleteConfirmTitle}</h3>
+            </div>
+            <p className="modal-description">{t.deleteConfirmMessage}</p>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary"
+                onClick={() => setDeletingUser(null)}
+                disabled={isDeleting}
+              >
+                {t.modal.cancelButton}
+              </button>
+              <button
+                type="button"
+                className="admin-btn admin-btn--danger-solid"
+                onClick={handleDeleteConfirm}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "…" : t.deleteButton}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

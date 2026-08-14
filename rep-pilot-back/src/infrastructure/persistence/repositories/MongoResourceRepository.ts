@@ -82,6 +82,11 @@ export class MongoResourceRepository implements ResourceRepository {
     return docs.map(toDomainResource);
   }
 
+  async findByCreatedBy(userId: string): Promise<Resource[]> {
+    const docs = await ResourceModel.find({ createdBy: userId });
+    return docs.map(toDomainResource);
+  }
+
   async findPaginated(
     filter: ResourceFilterDTO,
   ): Promise<PaginatedResult<Resource>> {

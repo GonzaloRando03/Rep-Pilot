@@ -209,31 +209,14 @@ export function CreateProjectModal({ onClose, t }: CreateProjectModalProps) {
     const items = e.dataTransfer.items;
     if (!items?.length) return;
 
-    const allFiles: DroppedFile[] = [];
-    let hasDirectory = false;
-
-    for (const item of Array.from(items)) {
-      const entry = item.webkitGetAsEntry?.();
-      if (!entry) continue;
-
-      if (entry.isDirectory) {
-        hasDirectory = true;
-        rootFolderNameRef.current = entry.name;
-        const dirFiles = await traverseEntry(entry, "");
-        allFiles.push(...dirFiles);
-      } else if (entry.isFile) {
-        const file = item.getAsFile();
-        if (file && isTextFile(entry.name)) {
-          const content = await readFileAsText(file);
-          allFiles.push({ path: entry.name, content });
-        }
-      }
-    }
-
-    if (!hasDirectory) {
+    const entry = items[0]?.webkitGetAsEntry?.();
+    if (items.length !== 1 || !entry || !entry.isDirectory) {
       setDragError(t.dropFolderRequired);
       return;
     }
+
+    rootFolderNameRef.current = entry.name;
+    const allFiles = await traverseEntry(entry, "");
 
     if (allFiles.length === 0) {
       setDragError(t.dropNoTextFiles);

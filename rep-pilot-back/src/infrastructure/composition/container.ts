@@ -38,6 +38,7 @@ import { CreateApiToken } from "../../application/use-cases/create-api-token/Cre
 import { ListApiTokens } from "../../application/use-cases/list-api-tokens/ListApiTokens";
 import { RevokeApiToken } from "../../application/use-cases/revoke-api-token/RevokeApiToken";
 import { ChangePassword } from "../../application/use-cases/change-password/ChangePassword";
+import { DeleteUser } from "../../application/use-cases/delete-user/DeleteUser";
 import { GetAllProjectFiles } from "../../application/use-cases/get-all-project-files/GetAllProjectFiles";
 import { SyncProjectFiles } from "../../application/use-cases/sync-project-files/SyncProjectFiles";
 import { Language } from "../../domain/enums/Language";
@@ -232,6 +233,11 @@ export function buildHttpApp() {
     "UpdateUser",
     logger,
   );
+  const deleteUser = withLogging(
+    new DeleteUser(userRepository, projectRepository, resourceRepository),
+    "DeleteUser",
+    logger,
+  );
 
   // API token use cases
   const createApiToken = withLogging(
@@ -317,6 +323,7 @@ export function buildHttpApp() {
     listApiTokens,
     revokeApiToken,
     changePassword,
+    deleteUser,
   );
   const authController = new AuthController(login);
   const tagController = new TagController(listTags, createTag);

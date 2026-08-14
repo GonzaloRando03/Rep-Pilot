@@ -67,6 +67,10 @@ export class InMemoryResourceRepository implements ResourceRepository {
     );
   }
 
+  async findByCreatedBy(userId: string): Promise<Resource[]> {
+    return Array.from(this.data.values()).filter((r) => r.createdBy === userId);
+  }
+
   async findPaginated(
     filter: ResourceFilterDTO,
   ): Promise<PaginatedResult<Resource>> {

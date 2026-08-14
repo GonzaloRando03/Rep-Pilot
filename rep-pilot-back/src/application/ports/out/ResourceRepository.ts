@@ -23,5 +23,6 @@ export interface ResourceRepository {
   findByGitUrl(gitUrl: string): Promise<Resource[]>;
   findStarredByUser(userId: string): Promise<Resource[]>;
   findByTags(tagIds: string[]): Promise<Resource[]>;
+  findByCreatedBy(userId: string): Promise<Resource[]>;
   deleteById(id: string): Promise<void>;
 }

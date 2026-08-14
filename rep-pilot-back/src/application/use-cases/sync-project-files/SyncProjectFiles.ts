@@ -25,6 +25,13 @@ export class SyncProjectFiles implements SyncProjectFilesUseCase {
       throw new NotFoundError(`Project with id '${projectId}' not found`);
     }
 
+    const rootFolderName = project.rootFolderName;
+    // Los clientes pueden enviar rutas con o sin el prefijo rootFolderName.
+    // Internamente trabajamos con rutas relativas a rootFolderName, que es lo
+    // que espera ProjectFileStorage.saveProjectFiles (evita el prefijo duplicado).
+    const rootPrefix =
+      rootFolderName.replace(/\\/g, "/").replace(/\/+$/, "") + "/";
+
     const metadata = await this.projectFileStorage.getFileMetadata(projectId);
     const lastSyncAt = request.lastSyncAt
       ? new Date(request.lastSyncAt).getTime()
@@ -36,19 +43,16 @@ export class SyncProjectFiles implements SyncProjectFilesUseCase {
 
     // ── 1. Procesar archivos entrantes del cliente ──────────
     for (const file of request.files) {
-      processedLocalPaths.add(file.path);
+      const relPath = this.normalizePath(file.path, rootPrefix);
+      processedLocalPaths.add(relPath);
 
-      const serverMeta = metadata[file.path];
+      // Compatibilidad con metadatos antiguos que guardaban el prefijo.
+      const serverMeta = metadata[relPath] ?? metadata[file.path];
 
       if (!serverMeta) {
         // Archivo nuevo: guardar directamente
-        await this.writeFile(
-          projectId,
-          project.rootFolderName,
-          file.path,
-          file.content,
-        );
-        await this.projectFileStorage.updateFileMetadata(projectId, file.path, {
+        await this.writeFile(projectId, rootFolderName, relPath, file.content);
+        await this.projectFileStorage.updateFileMetadata(projectId, relPath, {
           lastModifiedBy: userId,
           lastModifiedAt: now,
         });
@@ -61,50 +65,42 @@ export class SyncProjectFiles implements SyncProjectFilesUseCase {
           const serverContent =
             (await this.projectFileStorage.getFileContent(
               projectId,
-              project.rootFolderName,
-              file.path,
+              rootFolderName,
+              relPath,
             )) ?? "";
 
           // Guardamos la versión del cliente pero marcamos conflicto
           await this.writeFile(
             projectId,
-            project.rootFolderName,
-            file.path,
+            rootFolderName,
+            relPath,
             file.content,
           );
 
           conflicts.push({
-            path: file.path,
+            path: relPath,
             localContent: file.content,
             serverContent,
             serverModifiedAt: serverMeta.lastModifiedAt,
           });
 
           // Actualizar metadata a la versión del cliente
-          await this.projectFileStorage.updateFileMetadata(
-            projectId,
-            file.path,
-            {
-              lastModifiedBy: userId,
-              lastModifiedAt: now,
-            },
-          );
+          await this.projectFileStorage.updateFileMetadata(projectId, relPath, {
+            lastModifiedBy: userId,
+            lastModifiedAt: now,
+          });
         } else {
           // Sin conflicto: sobrescribir con versión del cliente
           await this.writeFile(
             projectId,
-            project.rootFolderName,
-            file.path,
+            rootFolderName,
+            relPath,
             file.content,
           );
-          await this.projectFileStorage.updateFileMetadata(
-            projectId,
-            file.path,
-            {
-              lastModifiedBy: userId,
-              lastModifiedAt: now,
-            },
-          );
+          await this.projectFileStorage.updateFileMetadata(projectId, relPath, {
+            lastModifiedBy: userId,
+            lastModifiedAt: now,
+          });
         }
       }
     }
@@ -113,8 +109,9 @@ export class SyncProjectFiles implements SyncProjectFilesUseCase {
     const changedFiles: ProjectFileWithMetaDTO[] = [];
 
     for (const [filePath, meta] of Object.entries(metadata)) {
+      const relPath = this.normalizePath(filePath, rootPrefix);
       // Saltar archivos que ya fueron procesados (enviados por el cliente)
-      if (processedLocalPaths.has(filePath)) {
+      if (processedLocalPaths.has(relPath)) {
         continue;
       }
 
@@ -123,12 +120,12 @@ export class SyncProjectFiles implements SyncProjectFilesUseCase {
         const content =
           (await this.projectFileStorage.getFileContent(
             projectId,
-            project.rootFolderName,
-            filePath,
+            rootFolderName,
+            relPath,
           )) ?? "";
 
         changedFiles.push({
-          path: filePath,
+          path: relPath,
           content,
           serverModifiedAt: meta.lastModifiedAt,
           lastModifiedBy: meta.lastModifiedBy,
@@ -136,11 +133,63 @@ export class SyncProjectFiles implements SyncProjectFilesUseCase {
       }
     }
 
+    // ── 3. Reconstruir el árbol de directorios ──────────────
+    // Los archivos nuevos deben reflejarse en project.directoryTree, que es
+    // lo que la UI usa para mostrarlos.
+    await this.refreshDirectoryTree(projectId);
+
     return {
       changedFiles,
       conflicts,
       newLastSyncAt: now,
     };
+  }
+
+  /**
+   * Normaliza una ruta a relativa a rootFolderName (sin el prefijo),
+   * eliminando además prefijos duplicados dejados por versiones anteriores.
+   */
+  private normalizePath(filePath: string, rootPrefix: string): string {
+    let normalized = filePath.replace(/\\/g, "/");
+    while (normalized.startsWith(rootPrefix)) {
+      normalized = normalized.slice(rootPrefix.length);
+    }
+    return normalized;
+  }
+
+  /**
+   * Recalcula project.directoryTree a partir de los archivos en disco.
+   */
+  private async refreshDirectoryTree(projectId: string): Promise<void> {
+    const project = await this.projectRepository.findById(projectId);
+    if (!project) {
+      return;
+    }
+
+    const rootPrefix =
+      project.rootFolderName.replace(/\\/g, "/").replace(/\/+$/, "") + "/";
+    const allFiles = await this.projectFileStorage.getProjectFiles(projectId);
+
+    const tree: Record<string, unknown> = {};
+    for (const file of allFiles) {
+      const relPath = this.normalizePath(file.path, rootPrefix);
+      const segments = relPath.split("/").filter(Boolean);
+      let current = tree;
+
+      for (let i = 0; i < segments.length; i++) {
+        const segment = segments[i];
+        if (i === segments.length - 1) {
+          current[segment] = true;
+        } else {
+          if (!current[segment] || typeof current[segment] === "boolean") {
+            current[segment] = {};
+          }
+          current = current[segment] as Record<string, unknown>;
+        }
+      }
+    }
+
+    await this.projectRepository.save(project.withDirectoryTree(tree));
   }
 
   private async writeFile(

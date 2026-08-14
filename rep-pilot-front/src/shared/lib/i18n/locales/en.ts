@@ -195,6 +195,12 @@ export const en: Translations = {
       adminBadge: "Admin",
       userBadge: "User",
       editButton: "Edit",
+      deleteButton: "Delete",
+      deleteConfirmTitle: "Delete user",
+      deleteConfirmMessage:
+        "Are you sure you want to delete this user? They will be removed from all projects and their resources will be reassigned to the system administrator.",
+      deleteSuccess: "User deleted successfully.",
+      deleteError: "Could not delete user. Please try again.",
       emptyTitle: "No users found",
       emptyDescription: "No user accounts exist yet.",
       loadError: "Could not load users. Please try again.",
@@ -587,7 +593,8 @@ export const en: Translations = {
         dropZonePlaceholder: "Drag a folder here to add files",
         dropZoneHint:
           "Text files from the directory and subdirectories will be added",
-        dropFolderRequired: "Drop a folder, not individual files.",
+        dropFolderRequired:
+          "Drop a single folder, not individual files or multiple folders.",
         dropNoTextFiles: "No text files found in the folder.",
         dropNoRequiredFiles: "The folder does not contain valid files.",
         groupLabel: "Group",
@@ -630,7 +637,8 @@ export const en: Translations = {
       dropZonePlaceholder: "Drag a folder here",
       dropZoneHint:
         "Text files from the directory and subdirectories will be read",
-      dropFolderRequired: "Drop a folder, not individual files.",
+      dropFolderRequired:
+        "Drop a single folder, not individual files or multiple folders.",
       dropNoTextFiles: "No text files found in the folder.",
       dropNoRequiredFiles: "The folder is not valid.",
       filesDetected: (n) => `${n} file${n !== 1 ? "s" : ""} detected`,
